@@ -2,7 +2,7 @@
 
 import pytest
 
-from pydatagokr._spec import Field, Table, _date_ym, _date_ymd, _integer, clean
+from pydatagokr._spec import Field, Table, _date_ym, _date_ymd, _integer, _ratio, clean
 from pydatagokr.services.kofia import CMA_STATUS, DLS_DLB, MARKET_FUNDS, OVERSEAS_DERIVATIVES
 from pydatagokr.services.procurement import SERVICES
 
@@ -51,7 +51,10 @@ def test_parsers_reject_non_ascii_digits():
     assert _integer("１２３４") is None and _integer("٠١٢٣") is None
     assert _date_ym("２０２４０１") is None
     assert _date_ymd("２０２４０１０５") is None
-    assert _integer("1234") == 1234 and _date_ym("2026.01") == "2026-01"
+    # _ratio/_decimal reject them too, so a full-width value does not type one vendor row two
+    # ways (a ratio field parsing "３.８" while the same digits in an int field return None).
+    assert _ratio("３.８") is None and _ratio("٣.٨") is None
+    assert _integer("1234") == 1234 and _date_ym("2026.01") == "2026-01" and _ratio("3.8") == 3.8
 
 
 def test_table_rejects_duplicate_columns_and_tokens():

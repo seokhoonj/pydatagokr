@@ -137,16 +137,42 @@ class DataGoKrSession:
             raise ValueError(
                 "base_url must be an https:// data.go.kr service root "
                 "(e.g. 'https://apis.data.go.kr/...')")
-        self.base_url = base_url.rstrip("/")
-        self.timeout = float(timeout)
-        self.json_param: JSONParam = json_param
-        self.response_format: ResponseFormat = response_format
+        self._base_url = base_url.rstrip("/")
+        self._timeout = float(timeout)
+        self._json_param: JSONParam = json_param
+        self._response_format: ResponseFormat = response_format
         self._api_key = resolve_api_key(api_key)
         self._opener = opener if opener is not None else cast(_Opener, _OPENER)
 
     def __repr__(self) -> str:
         # Never shows the service key, in whole or in part.
         return "DataGoKrSession(...)"
+
+    # The transport config is validated once at construction and then read-only. base_url
+    # in particular is checked for the https scheme BEFORE the key is resolved (see
+    # __init__); exposing it as a settable attribute would let a caller repoint the session
+    # -- and the key-bearing query string -- at an http or arbitrary host after that check,
+    # reopening the exact leak the scheme guard closes. Read-only properties keep the
+    # values inspectable without that hole.
+    @property
+    def base_url(self) -> str:
+        """The https service root, fixed at construction (read-only)."""
+        return self._base_url
+
+    @property
+    def timeout(self) -> float:
+        """The per-request timeout in seconds, fixed at construction (read-only)."""
+        return self._timeout
+
+    @property
+    def json_param(self) -> JSONParam:
+        """The 'answer in JSON' query flag this service takes (read-only)."""
+        return self._json_param
+
+    @property
+    def response_format(self) -> ResponseFormat:
+        """The reply encoding this session parses (read-only)."""
+        return self._response_format
 
     def fetch(self, operation: str, *, num_of_rows: int = 1000,
               **filters: str | None) -> list[Row]:
@@ -170,7 +196,7 @@ class DataGoKrSession:
         # serviceKey / numOfRows / pageNo (and the JSON flag) are set by the transport itself;
         # a filter of the same name would overwrite them -- e.g. pageNo would pin every request
         # to one page and silently accumulate duplicate rows -- so reject the collision loudly.
-        reserved = {"serviceKey", "numOfRows", "pageNo", self.json_param} & filters.keys()
+        reserved = {"serviceKey", "numOfRows", "pageNo", self._json_param} & filters.keys()
         if reserved:
             raise ValueError(
                 f"filter {sorted(reserved)} collides with a transport-managed query parameter "
@@ -222,18 +248,18 @@ class DataGoKrSession:
         }
         # A JSON service takes the "answer in JSON" flag; an XML-only service faults if it
         # is sent at all, so xml mode omits it and gets XML back.
-        if self.response_format == "json":
-            params[self.json_param] = "json"
+        if self._response_format == "json":
+            params[self._json_param] = "json"
         params.update({name: value for name, value in filters.items() if value is not None})
         # urlencode exactly once: the raw key goes in as a plain value and comes out
         # single-encoded. Never pre-encode it (the portal's "encoding key" form would be
         # double-encoded here and rejected).
         query = urllib.parse.urlencode(params)
         request = urllib.request.Request(
-            f"{self.base_url}/{operation}?{query}", headers={"User-Agent": _USER_AGENT})
+            f"{self._base_url}/{operation}?{query}", headers={"User-Agent": _USER_AGENT})
         failure: DataGoKrError
         try:
-            with self._opener.open(request, timeout=self.timeout) as response:
+            with self._opener.open(request, timeout=self._timeout) as response:
                 raw = response.read()
         except urllib.error.HTTPError as err:
             # Build the package error while the response is open, then raise it after
@@ -273,7 +299,7 @@ class DataGoKrSession:
         encodings decode into the same nested dict, so the envelope logic below runs once
         regardless of the wire format."""
         payload: object
-        if self.response_format == "xml":
+        if self._response_format == "xml":
             payload = self._payload_from_xml(raw, operation)
         else:
             payload = self._payload_from_json(raw, operation)

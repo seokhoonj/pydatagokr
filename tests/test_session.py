@@ -629,6 +629,17 @@ def test_https_base_url_is_accepted():
     assert DataGoKrSession("https://apis.data.go.kr/x", _KEY).base_url == "https://apis.data.go.kr/x"
 
 
+def test_transport_config_is_read_only_after_construction():
+    # base_url is validated as https BEFORE the key is resolved; if it stayed settable a caller
+    # could repoint the session -- and the key-bearing query string -- at http after that check.
+    # It and its siblings are read-only properties, so assignment raises rather than reopening
+    # the leak the scheme guard closes.
+    session = DataGoKrSession("https://apis.data.go.kr/x", _KEY)
+    for attr in ("base_url", "timeout", "json_param", "response_format"):
+        with pytest.raises(AttributeError):
+            setattr(session, attr, "http://evil.example")
+
+
 def test_over_collected_paging_refuses_to_return_duplicates():
     # A vendor that declares a totalCount but ignores pageNo re-serves the same full page every
     # request; collecting past the count would silently return duplicates, so refuse it -- the

@@ -188,7 +188,10 @@ def _integer(raw: object) -> int | None:
 def _ratio(raw: object) -> float | None:
     """A percent string to a float (blank/``"-"``/``"nan"``/non-finite -> None)."""
     text = str(raw).replace(",", "").strip()
-    if not text or text in ("-", "None", "nan"):
+    if not text or text in ("-", "None", "nan") or not text.isascii():
+        # float() accepts non-ASCII decimal digits (Arabic-Indic, full-width); a real
+        # ratio/measure is always ASCII, and rejecting them keeps this symmetric with
+        # _integer and the date parsers rather than typing one vendor row two ways.
         return None
     try:
         value = float(text)
