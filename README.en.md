@@ -111,7 +111,7 @@ import polars as pl
 pl.DataFrame(rows)
 ```
 
-## 3. Pre-built services (current)
+## 3. List of pre-built services (current)
 
 Services **pre-built** so you can use them right away among the portal's many APIs. Each
 accessor has its own doc covering its operations, CLI/Python examples, and how to find the
