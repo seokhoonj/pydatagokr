@@ -84,3 +84,22 @@ def test_land_region_ambiguous_lists_candidates():
         land_region("전라")
     msg = str(exc.value)
     assert "전라남도" in msg and "전라도" in msg
+
+
+def test_land_region_do_abbreviation_resolves_to_the_south_korean_zone():
+    # A 도 abbreviation must expand to its full 시도 name, not fall through to an interior
+    # substring match: "경북" sits inside "함경북도", which silently returned the North Korean
+    # zone (11K10000) instead of 경상북도. The alias resolves it; the loud siblings still work.
+    assert land_region("경북") == "11H10000"       # 경상북도, NOT 함경북도 (11K10000)
+    assert land_region("경남") == "11H20000"       # 경상남도, NOT 함경남도 (11K20000)
+    assert land_region("충북") == "11C10000" and land_region("충남") == "11C20000"
+    assert land_region("함경북도") == "11K10000"   # the NK zone is still reachable by its full name
+
+
+def test_temp_region_ambiguous_message_gives_the_code_to_use():
+    # Two 예보구역 named exactly "광주" (경기 / 전남) cannot be told apart by a "more specific
+    # name" -- the message must surface each code and point at passing region_code directly.
+    with pytest.raises(ValueError) as exc:
+        temp_region("광주")
+    msg = str(exc.value)
+    assert "11B20702" in msg and "11F20501" in msg and "region_code=" in msg

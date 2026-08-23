@@ -75,17 +75,27 @@ def temp_region(query: str) -> str:
 
 
 def _resolve_named(query: str, table: tuple[tuple[str, str], ...], label: str) -> str:
-    """Match ``query`` against ``table`` of (name, code): an exact name wins outright,
-    otherwise fall back to a substring match. Raises ``ValueError`` on no/ambiguous match."""
+    """Match ``query`` against ``table`` of (name, code): a 도 abbreviation is expanded to its
+    full 시도 name first, then an exact name wins outright, otherwise a *prefix* match. Raises
+    ``ValueError`` on no match, or on an ambiguous one (the message lists each candidate with
+    its code and points at passing the code directly)."""
     normalized = unicodedata.normalize("NFC", query).strip()
-    exact = [(name, code) for (name, code) in table if name == normalized]
-    candidates = exact or [(name, code) for (name, code) in table if normalized in name]
+    # A 도 abbreviation ("경북") is not a prefix of its full name ("경상북도"), so without this
+    # expansion it falls through to a match that lands INSIDE an unrelated name: "경북" is a
+    # substring of "함경북도", which silently resolved 경상북도 to a North Korean zone. Expand via
+    # the same alias table lawd_code uses -- its targets ("경상북도", "충청북도") are exactly the
+    # names LAND_ZONES/TEMP_CITIES carry -- then match by prefix, never by interior substring.
+    resolved = _SIDO_ALIAS.get(normalized, normalized)
+    exact = [(name, code) for (name, code) in table if name == resolved]
+    candidates = exact or [(name, code) for (name, code) in table if name.startswith(resolved)]
     if not candidates:
         raise ValueError(f"no {label} matches {query!r}")
     if len(candidates) > 1:
-        listing = ", ".join(name for (name, _) in candidates)
+        # Some names collide outright (two bare "광주" 예보구역, 경기 vs 전남) with no finer name
+        # to give, so the actionable escape is the code itself, not "a more specific name".
+        listing = ", ".join(f"{name} ({code})" for (name, code) in candidates)
         raise ValueError(
-            f"{query!r} matches several {label}: {listing} -- use a more specific name"
-        )
+            f"{query!r} matches several {label}: {listing} -- pass the code directly as "
+            f"region_code=, or use a more specific name")
     _, code = candidates[0]
     return code
