@@ -66,7 +66,7 @@ def _re(raw):
 
 def test_apt_trade_synthesizes_deal_date_and_types_the_measures():
     realestate, _ = _re(_xml([_TRADE_ROW], 1))
-    row = realestate.apt_trade(region_code="11110", deal_ym="202401")[0]
+    row = realestate.apt_trade(lawd_code="11110", deal_ym="202401")[0]
     assert row["deal_date"] == "2024-01-19"       # from dealYear/dealMonth/dealDay
     assert row["exclusive_area"] == pytest.approx(84.9478)       # decimal -> float
     assert row["deal_amount_manwon"] == 101300    # comma stripped -> int
@@ -80,19 +80,19 @@ def test_a_non_numeric_date_part_drops_only_that_row_not_the_whole_fetch():
     # yields no date, so _spec.clean drops just that one row on its required date-check.
     bad = dict(_TRADE_ROW, dealDay="19일")            # a stray non-numeric day
     realestate, _ = _re(_xml([bad, dict(_TRADE_ROW)], 2))
-    rows = realestate.apt_trade(region_code="11110", deal_ym="202401")
+    rows = realestate.apt_trade(lawd_code="11110", deal_ym="202401")
     assert len(rows) == 1                              # the good row survives; no crash
     assert rows[0]["deal_date"] == "2024-01-19"
 
 
 def test_raw_passthrough_keeps_the_vendor_tokens_unchanged():
     realestate, _ = _re(_xml([_TRADE_ROW], 1))
-    assert realestate.apt_trade(region_code="11110", deal_ym="202401", clean=False) == [_TRADE_ROW]
+    assert realestate.apt_trade(lawd_code="11110", deal_ym="202401", clean=False) == [_TRADE_ROW]
 
 
 def test_the_operation_path_and_filters_reach_the_vendor():
     realestate, opener = _re(_xml([], 0))
-    realestate.apt_rent(region_code="11110", deal_ym="202401")
+    realestate.apt_rent(lawd_code="11110", deal_ym="202401")
     query = opener.requests[0].full_url
     assert "RTMSDataSvcAptRent/getRTMSDataSvcAptRent" in query   # per-service path segment
     assert "LAWD_CD=11110" in query
@@ -101,13 +101,13 @@ def test_the_operation_path_and_filters_reach_the_vendor():
 
 def test_a_three_digit_result_code_is_read_as_success():
     realestate, _ = _re(_xml([_TRADE_ROW], 1))
-    assert len(realestate.apt_trade(region_code="11110", deal_ym="202401")) == 1
+    assert len(realestate.apt_trade(lawd_code="11110", deal_ym="202401")) == 1
 
 
 def test_fetch_rejects_an_unknown_operation():
     realestate, _ = _re(_xml([], 0))
     with pytest.raises(ValueError, match="unknown operation"):
-        realestate.fetch("nope", region_code="11110", deal_ym="202401")
+        realestate.fetch("nope", lawd_code="11110", deal_ym="202401")
 
 
 # Fields shared by the three sale-type operations (매매·매매상세·분양권). deal_date is
@@ -133,7 +133,7 @@ _SALE_RAW_CORE = {
 }
 _SALE_CLEAN_CORE = {
     "deal_date":      "2024-01-19",
-    "region_code":    "11110",
+    "lawd_code":    "11110",
     "dong":           "숭인동",
     "jibun":          "766",
     "apt_name":       "종로청계힐스테이트",
@@ -169,13 +169,13 @@ _CASES = [
          "sub_no": "0000", "land_code": "1", "land_leasehold": "N", "dong_code": "12300",
          "register_date": "24.01.25", "road_name": "종로", "road_code": "400",
          "road_main_no": "12", "road_sub_no": "0", "road_seq": "01",
-         "road_region_code": "11110", "road_basement_yn": "0"},
+         "road_sgg_code": "11110", "road_basement_yn": "0"},
         "RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev",
     ),
     (
         "apt_presale",
         {**_SALE_RAW_CORE, "ownershipGbn": "분양권", "sggNm": "종로구"},
-        {**_SALE_CLEAN_CORE, "ownership_type": "분양권", "region_name": "종로구"},
+        {**_SALE_CLEAN_CORE, "ownership_type": "분양권", "sgg_name": "종로구"},
         "RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade",
     ),
     (
@@ -187,14 +187,14 @@ _CASES = [
          "preMonthlyRent": "0", "useRRRight": "", "aptSeq": "11110-100", "roadnm": "종로",
          "roadnmcd": "400", "roadnmbonbun": "12", "roadnmbubun": "0", "roadnmseq": "01",
          "roadnmsggcd": "11110", "roadnmbcd": "0"},
-        {"deal_date": "2024-01-19", "region_code": "11110", "dong": "숭인동", "jibun": "766",
+        {"deal_date": "2024-01-19", "lawd_code": "11110", "dong": "숭인동", "jibun": "766",
          "apt_name": "종로청계힐스테이트", "exclusive_area": 84.5, "floor": 13,
          "build_year": 2009, "deposit_manwon": 50000, "monthly_rent_manwon": 0,
          "contract_type": "신규", "contract_term": "202401~202601",
          "prev_deposit_manwon": 0, "prev_monthly_rent_manwon": 0,
          "renewal_right_used": None, "apt_seq": "11110-100", "road_name": "종로",
          "road_code": "400", "road_main_no": "12", "road_sub_no": "0", "road_seq": "01",
-         "road_region_code": "11110", "road_basement_yn": "0"},
+         "road_sgg_code": "11110", "road_basement_yn": "0"},
         "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
     ),
 ]
@@ -205,7 +205,7 @@ _CASES = [
 def test_every_operation_types_its_row_and_wires_the_filters(
         name, raw_row, clean_row, operation):
     realestate, opener = _re(_xml([raw_row], 1))
-    rows = realestate.fetch(name, region_code="11110", deal_ym="202401")
+    rows = realestate.fetch(name, lawd_code="11110", deal_ym="202401")
     assert rows == [clean_row]                        # exact typed row, all columns
     query = opener.requests[0].full_url
     assert operation in query                         # the operation's own service segment

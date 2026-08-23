@@ -96,6 +96,6 @@ def _resolve_named(query: str, table: tuple[tuple[str, str], ...], label: str) -
         listing = ", ".join(f"{name} ({code})" for (name, code) in candidates)
         raise ValueError(
             f"{query!r} matches several {label}: {listing} -- pass the code directly as "
-            f"region_code=, or use a more specific name")
+            f"regid=, or use a more specific name")
     _, code = candidates[0]
     return code

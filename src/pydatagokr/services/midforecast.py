@@ -4,7 +4,7 @@ The 3-to-10-day outlook for a forecast region, two ways: `land` (getMidLandFcst 
 `precip_prob_*` and a sky-state phrase `sky_*` for each half-day) and `temperature`
 (getMidTa -- daily 최저·최고기온 `temp_min_*`/`temp_max_*`). Where 단기예보 (the `weather`
 surface) forecasts the next ~3 days on a 5km grid, 중기예보 covers days 4-10 for a coarser
-예보구역 named by a ``region_code`` (``11B00000`` 서울/인천/경기 for land, ``11B10101`` 서울
+예보구역 named by a ``regid`` (``11B00000`` 서울/인천/경기 for land, ``11B10101`` 서울
 for temperature -- see the 기상청 예보구역 code table).
 
 The rows are **wide**: one row per region, a column per forecast day. Days 4-7 split into
@@ -46,12 +46,12 @@ def _half_day_fields(token: str, column: str, kind: _spec.FieldKind) -> tuple[Fi
 
 
 LAND = Table("land", "getMidLandFcst", (
-    Field("regId", "region_code", "text", is_key=True),               # 예보구역코드
+    Field("regId", "regid", "text", is_key=True),               # 예보구역코드
 ) + _half_day_fields("rnSt", "precip_prob", "int")               # 강수확률(%)
   + _half_day_fields("wf", "sky", "text"), is_wide_key=True)     # 날씨(하늘상태 문구)
 
 TEMPERATURE = Table("temperature", "getMidTa", (
-    Field("regId", "region_code", "text", is_key=True),               # 예보구역코드(도시)
+    Field("regId", "regid", "text", is_key=True),               # 예보구역코드(도시)
 ) + tuple(
     field
     for day in (4, 5, 6, 7, 8, 9, 10)
@@ -67,8 +67,8 @@ class MidForecast:
     ``DATAGOKR_API_KEY`` / the config file)::
 
         mid = MidForecast()
-        rows = mid.land(region_code="11B00000", base_time="202608111800")        # 육상(강수·날씨)
-        rows = mid.temperature(region_code="11B10101", base_time="202608111800") # 기온(최저·최고)
+        rows = mid.land(regid="11B00000", base_time="202608111800")        # 육상(강수·날씨)
+        rows = mid.temperature(regid="11B10101", base_time="202608111800") # 기온(최저·최고)
     """
 
     def __init__(self, api_key: str | None = None, *, timeout: float = 30.0) -> None:
@@ -79,49 +79,49 @@ class MidForecast:
         return f"MidForecast({self._session!r})"
 
     @overload
-    def land(self, *, region_code: str, base_time: str,
+    def land(self, *, regid: str, base_time: str,
              clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def land(self, *, region_code: str, base_time: str,
+    def land(self, *, regid: str, base_time: str,
              clean: Literal[False]) -> list[Row]: ...
     @overload
-    def land(self, *, region_code: str, base_time: str,
+    def land(self, *, regid: str, base_time: str,
              clean: bool) -> list[Row] | list[CleanRow]: ...
-    def land(self, *, region_code: str, base_time: str,
+    def land(self, *, regid: str, base_time: str,
              clean: bool = True) -> list[Row] | list[CleanRow]:
-        """중기육상예보 (``getMidLandFcst``) -- 강수확률·날씨 for ``region_code`` (a 예보구역코드
+        """중기육상예보 (``getMidLandFcst``) -- 강수확률·날씨 for ``regid`` (a 예보구역코드
         such as ``11B00000``) announced at ``base_time`` (YYYYMMDDHHMM, the 0600 or 1800
         발표시각). ``clean=True`` (the default) returns typed rows; ``clean=False`` raw."""
-        return self.fetch("land", region_code=region_code, base_time=base_time, clean=clean)
+        return self.fetch("land", regid=regid, base_time=base_time, clean=clean)
 
     @overload
-    def temperature(self, *, region_code: str, base_time: str,
+    def temperature(self, *, regid: str, base_time: str,
                     clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def temperature(self, *, region_code: str, base_time: str,
+    def temperature(self, *, regid: str, base_time: str,
                     clean: Literal[False]) -> list[Row]: ...
     @overload
-    def temperature(self, *, region_code: str, base_time: str,
+    def temperature(self, *, regid: str, base_time: str,
                     clean: bool) -> list[Row] | list[CleanRow]: ...
-    def temperature(self, *, region_code: str, base_time: str,
+    def temperature(self, *, regid: str, base_time: str,
                     clean: bool = True) -> list[Row] | list[CleanRow]:
-        """중기기온예보 (``getMidTa``) -- daily 최저·최고기온 for ``region_code`` (a 도시 예보구역
+        """중기기온예보 (``getMidTa``) -- daily 최저·최고기온 for ``regid`` (a 도시 예보구역
         코드 such as ``11B10101``). Args as :meth:`land`."""
-        return self.fetch("temperature", region_code=region_code, base_time=base_time, clean=clean)
+        return self.fetch("temperature", regid=regid, base_time=base_time, clean=clean)
 
     @overload
-    def fetch(self, name: str, *, region_code: str, base_time: str,
+    def fetch(self, name: str, *, regid: str, base_time: str,
               clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def fetch(self, name: str, *, region_code: str, base_time: str,
+    def fetch(self, name: str, *, regid: str, base_time: str,
               clean: Literal[False]) -> list[Row]: ...
     @overload
-    def fetch(self, name: str, *, region_code: str, base_time: str,
+    def fetch(self, name: str, *, regid: str, base_time: str,
               clean: bool) -> list[Row] | list[CleanRow]: ...
-    def fetch(self, name: str, *, region_code: str, base_time: str,
+    def fetch(self, name: str, *, regid: str, base_time: str,
               clean: bool = True) -> list[Row] | list[CleanRow]:
-        """Either operation by name (``land`` / ``temperature``) for one ``region_code`` and
-        ``base_time``. A ``region_code`` is a 예보구역 REGID -- resolve one from a place name
+        """Either operation by name (``land`` / ``temperature``) for one ``regid`` and
+        ``base_time``. A ``regid`` is a 예보구역 REGID -- resolve one from a place name
         with :func:`~pydatagokr.land_region` / :func:`~pydatagokr.temp_region` (CLI:
         ``datagokr land-region`` / ``temp-region``). Raises ``ValueError`` for an unknown
         ``name``; :class:`~pydatagokr.errors.DataGoKrError` (and subclasses) on a transport or
@@ -131,7 +131,7 @@ class MidForecast:
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
         rows = self._session.fetch(table.operation, dataType="XML",
-                                   regId=region_code, tmFc=base_time)
+                                   regId=regid, tmFc=base_time)
         return _spec.clean(rows, table) if clean else rows
 
     @staticmethod

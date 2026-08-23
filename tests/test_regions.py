@@ -98,8 +98,8 @@ def test_land_region_do_abbreviation_resolves_to_the_south_korean_zone():
 
 def test_temp_region_ambiguous_message_gives_the_code_to_use():
     # Two 예보구역 named exactly "광주" (경기 / 전남) cannot be told apart by a "more specific
-    # name" -- the message must surface each code and point at passing region_code directly.
+    # name" -- the message must surface each code and point at passing regid directly.
     with pytest.raises(ValueError) as exc:
         temp_region("광주")
     msg = str(exc.value)
-    assert "11B20702" in msg and "11F20501" in msg and "region_code=" in msg
+    assert "11B20702" in msg and "11F20501" in msg and "regid=" in msg

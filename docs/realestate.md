@@ -31,7 +31,7 @@ from pydatagokr import DataGoKr, lawd_code
 
 client = DataGoKr()
 code = lawd_code("종로구")                  # "11110"
-rows = client.realestate.apt_trade(region_code=code, deal_ym="202401")
+rows = client.realestate.apt_trade(lawd_code=code, deal_ym="202401")
 ```
 
 ## 법정동코드 찾기

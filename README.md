@@ -59,7 +59,7 @@ client = DataGoKr(api_key="발급받은-디코딩-키")   # 저장해 뒀으면 
 forecast = client.weather.forecast(nx=60, ny=127)
 
 # 아파트 매매 실거래: 종로구(11110), 2024년 1월
-trades = client.realestate.apt_trade(region_code="11110", deal_ym="202401")
+trades = client.realestate.apt_trade(lawd_code="11110", deal_ym="202401")
 ```
 
 ### 2.2 목록에 없는 서비스
@@ -121,7 +121,7 @@ pl.DataFrame(rows)
   호출됩니다.
 - **이름·타입 정리(`clean`).** 기관이 주는 행은 필드명만으로는 의미를 알기 어렵고(`sggCd`,
   `excluUseAr`) 값이 전부 문자열입니다. 기본값 `clean=True`는 **필드명을 알아보기 쉬운 이름으로
-  바꾸고 문자열 값을 실제 타입으로 변환**하며(`region_code`, `exclusive_area=84.97`,
+  바꾸고 문자열 값을 실제 타입으로 변환**하며(`lawd_code`, `exclusive_area=84.97`,
   `deal_amount_manwon=82000`), 파싱되지 않는 값은 `None`으로 둡니다. 날짜가 빠진 행은 결과에서 빼고,
   복합키 테이블은 키 차원이 빠진 행도 빼지만, 넓은 키 테이블은 그 값을 `None`으로 두고 행을
   유지합니다. `clean=False`는 기관 원문 그대로 둡니다.

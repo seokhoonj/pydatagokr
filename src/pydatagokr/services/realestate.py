@@ -2,7 +2,7 @@
 
 Four sibling services under one org, grouped as one surface: 아파트 매매 (`apt_trade`),
 매매 상세 (`apt_trade_detail`, adds the road address), 전월세 (`apt_rent`), and 분양권전매
-(`apt_presale`). Each row is one transaction for a 법정동 (``region_code`` = the 5-digit
+(`apt_presale`). Each row is one transaction for a 법정동 (``lawd_code`` = the 5-digit
 법정동 시군구코드, ``LAWD_CD``) and a 계약년월 (``deal_ym`` = YYYYMM, ``DEAL_YMD``). The
 vendor's split year/month/day is combined into a single ``deal_date`` (ISO); amounts are in
 만원 as the vendor reports them (거래금액·보증금·월세). ``clean=True`` (the default) returns
@@ -32,7 +32,7 @@ BASE_URL = "https://apis.data.go.kr/1613000"
 # synthesized from the vendor's dealYear/dealMonth/dealDay before cleaning (see _deal_date).
 _SALE_CORE = (
     Field("dealDate",        "deal_date",       "date_ymd", is_key=True),   # 계약일
-    Field("sggCd",           "region_code",     "text", is_key=True),       # 법정동 시군구코드
+    Field("sggCd",           "lawd_code",     "text", is_key=True),       # 법정동 시군구코드
     Field("umdNm",           "dong",            "text", is_key=True),       # 법정동명
     Field("jibun",           "jibun",           "text", is_key=True),       # 지번
     Field("aptNm",           "apt_name",        "text", is_key=True),       # 단지명
@@ -71,20 +71,20 @@ APT_TRADE_DETAIL = Table(
     Field("roadNmBonbun",    "road_main_no",    "text"),
     Field("roadNmBubun",     "road_sub_no",     "text"),
     Field("roadNmSeq",       "road_seq",        "text"),
-    Field("roadNmSggCd",     "road_region_code", "text"),
+    Field("roadNmSggCd",     "road_sgg_code", "text"),
     Field("roadNmbCd",       "road_basement_yn", "text"),
 ), is_wide_key=True)
 
 APT_PRESALE = Table("apt_presale", "RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade",
                     _SALE_CORE + (
     Field("ownershipGbn",    "ownership_type",  "text"),                    # 권리구분(분양/입주권)
-    Field("sggNm",           "region_name",     "text"),                    # 시군구명
+    Field("sggNm",           "sgg_name",     "text"),                    # 시군구명
 ), is_wide_key=True)
 
 APT_RENT = Table("apt_rent", "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
                  (
     Field("dealDate",        "deal_date",       "date_ymd", is_key=True),
-    Field("sggCd",           "region_code",     "text", is_key=True),
+    Field("sggCd",           "lawd_code",     "text", is_key=True),
     Field("umdNm",           "dong",            "text", is_key=True),
     Field("jibun",           "jibun",           "text", is_key=True),
     Field("aptNm",           "apt_name",        "text", is_key=True),
@@ -104,7 +104,7 @@ APT_RENT = Table("apt_rent", "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
     Field("roadnmbonbun",    "road_main_no",    "text"),
     Field("roadnmbubun",     "road_sub_no",     "text"),
     Field("roadnmseq",       "road_seq",        "text"),
-    Field("roadnmsggcd",     "road_region_code", "text"),
+    Field("roadnmsggcd",     "road_sgg_code", "text"),
     Field("roadnmbcd",       "road_basement_yn", "text"),
 ), is_wide_key=True)
 
@@ -139,8 +139,8 @@ class RealEstate:
     resolve ``DATAGOKR_API_KEY`` / the config file)::
 
         re = RealEstate()
-        rows = re.apt_trade(region_code="11110", deal_ym="202401")   # 종로구 2024-01 매매
-        rows = re.apt_rent(region_code="11110", deal_ym="202401")    # 전월세
+        rows = re.apt_trade(lawd_code="11110", deal_ym="202401")   # 종로구 2024-01 매매
+        rows = re.apt_rent(lawd_code="11110", deal_ym="202401")    # 전월세
     """
 
     def __init__(self, api_key: str | None = None, *, timeout: float = 30.0) -> None:
@@ -151,73 +151,73 @@ class RealEstate:
         return f"RealEstate({self._session!r})"
 
     @overload
-    def apt_trade(self, *, region_code: str, deal_ym: str,
+    def apt_trade(self, *, lawd_code: str, deal_ym: str,
                   clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def apt_trade(self, *, region_code: str, deal_ym: str,
+    def apt_trade(self, *, lawd_code: str, deal_ym: str,
                   clean: Literal[False]) -> list[Row]: ...
     @overload
-    def apt_trade(self, *, region_code: str, deal_ym: str,
+    def apt_trade(self, *, lawd_code: str, deal_ym: str,
                   clean: bool) -> list[Row] | list[CleanRow]: ...
-    def apt_trade(self, *, region_code: str, deal_ym: str,
+    def apt_trade(self, *, lawd_code: str, deal_ym: str,
                   clean: bool = True) -> list[Row] | list[CleanRow]:
-        """아파트 매매 실거래가 for one 법정동 (``region_code``) and 계약년월 (``deal_ym`` =
+        """아파트 매매 실거래가 for one 법정동 (``lawd_code``) and 계약년월 (``deal_ym`` =
         YYYYMM). ``clean=True`` (the default) returns typed rows; ``clean=False`` raw."""
-        return self.fetch("apt_trade", region_code=region_code, deal_ym=deal_ym, clean=clean)
+        return self.fetch("apt_trade", lawd_code=lawd_code, deal_ym=deal_ym, clean=clean)
 
     @overload
-    def apt_trade_detail(self, *, region_code: str, deal_ym: str,
+    def apt_trade_detail(self, *, lawd_code: str, deal_ym: str,
                          clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def apt_trade_detail(self, *, region_code: str, deal_ym: str,
+    def apt_trade_detail(self, *, lawd_code: str, deal_ym: str,
                          clean: Literal[False]) -> list[Row]: ...
     @overload
-    def apt_trade_detail(self, *, region_code: str, deal_ym: str,
+    def apt_trade_detail(self, *, lawd_code: str, deal_ym: str,
                          clean: bool) -> list[Row] | list[CleanRow]: ...
-    def apt_trade_detail(self, *, region_code: str, deal_ym: str,
+    def apt_trade_detail(self, *, lawd_code: str, deal_ym: str,
                          clean: bool = True) -> list[Row] | list[CleanRow]:
         """아파트 매매 실거래가 상세 (adds the road address). Args as :meth:`apt_trade`."""
-        return self.fetch("apt_trade_detail", region_code=region_code, deal_ym=deal_ym,
+        return self.fetch("apt_trade_detail", lawd_code=lawd_code, deal_ym=deal_ym,
                           clean=clean)
 
     @overload
-    def apt_rent(self, *, region_code: str, deal_ym: str,
+    def apt_rent(self, *, lawd_code: str, deal_ym: str,
                  clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def apt_rent(self, *, region_code: str, deal_ym: str,
+    def apt_rent(self, *, lawd_code: str, deal_ym: str,
                  clean: Literal[False]) -> list[Row]: ...
     @overload
-    def apt_rent(self, *, region_code: str, deal_ym: str,
+    def apt_rent(self, *, lawd_code: str, deal_ym: str,
                  clean: bool) -> list[Row] | list[CleanRow]: ...
-    def apt_rent(self, *, region_code: str, deal_ym: str,
+    def apt_rent(self, *, lawd_code: str, deal_ym: str,
                  clean: bool = True) -> list[Row] | list[CleanRow]:
         """아파트 전월세 실거래가 (보증금·월세). Args as :meth:`apt_trade`."""
-        return self.fetch("apt_rent", region_code=region_code, deal_ym=deal_ym, clean=clean)
+        return self.fetch("apt_rent", lawd_code=lawd_code, deal_ym=deal_ym, clean=clean)
 
     @overload
-    def apt_presale(self, *, region_code: str, deal_ym: str,
+    def apt_presale(self, *, lawd_code: str, deal_ym: str,
                     clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def apt_presale(self, *, region_code: str, deal_ym: str,
+    def apt_presale(self, *, lawd_code: str, deal_ym: str,
                     clean: Literal[False]) -> list[Row]: ...
     @overload
-    def apt_presale(self, *, region_code: str, deal_ym: str,
+    def apt_presale(self, *, lawd_code: str, deal_ym: str,
                     clean: bool) -> list[Row] | list[CleanRow]: ...
-    def apt_presale(self, *, region_code: str, deal_ym: str,
+    def apt_presale(self, *, lawd_code: str, deal_ym: str,
                     clean: bool = True) -> list[Row] | list[CleanRow]:
         """아파트 분양권전매 실거래가. Args as :meth:`apt_trade`."""
-        return self.fetch("apt_presale", region_code=region_code, deal_ym=deal_ym, clean=clean)
+        return self.fetch("apt_presale", lawd_code=lawd_code, deal_ym=deal_ym, clean=clean)
 
     @overload
-    def fetch(self, name: str, *, region_code: str, deal_ym: str,
+    def fetch(self, name: str, *, lawd_code: str, deal_ym: str,
               clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def fetch(self, name: str, *, region_code: str, deal_ym: str,
+    def fetch(self, name: str, *, lawd_code: str, deal_ym: str,
               clean: Literal[False]) -> list[Row]: ...
     @overload
-    def fetch(self, name: str, *, region_code: str, deal_ym: str,
+    def fetch(self, name: str, *, lawd_code: str, deal_ym: str,
               clean: bool) -> list[Row] | list[CleanRow]: ...
-    def fetch(self, name: str, *, region_code: str, deal_ym: str,
+    def fetch(self, name: str, *, lawd_code: str, deal_ym: str,
               clean: bool = True) -> list[Row] | list[CleanRow]:
         """Any of the four operations by name (see :meth:`operations`) for one 법정동 and
         계약년월. Raises ``ValueError`` for an unknown ``name``;
@@ -227,7 +227,7 @@ class RealEstate:
             table = TABLES[name]
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
-        rows = self._session.fetch(table.operation, LAWD_CD=region_code, DEAL_YMD=deal_ym)
+        rows = self._session.fetch(table.operation, LAWD_CD=lawd_code, DEAL_YMD=deal_ym)
         if not clean:
             return rows
         for row in rows:

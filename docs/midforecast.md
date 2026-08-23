@@ -16,8 +16,8 @@
 ## CLI
 
 ```bash
-datagokr midforecast land --region 11B00000 --base-time 202608110600
-datagokr midforecast temperature --region 11B10101 --base-time 202608110600
+datagokr midforecast land --regid 11B00000 --base-time 202608110600
+datagokr midforecast temperature --regid 11B10101 --base-time 202608110600
 ```
 
 `--base-time`은 발표시각(매일 `0600`·`1800`, YYYYMMDDHHMM). 0600 발표는 4일째까지,
@@ -29,8 +29,8 @@ datagokr midforecast temperature --region 11B10101 --base-time 202608110600
 from pydatagokr import DataGoKr, land_region, temp_region
 
 client = DataGoKr()
-land = client.midforecast.land(region_code=land_region("서울"), base_time="202608110600")
-temp = client.midforecast.temperature(region_code=temp_region("서울"), base_time="202608110600")
+land = client.midforecast.land(regid=land_region("서울"), base_time="202608110600")
+temp = client.midforecast.temperature(regid=temp_region("서울"), base_time="202608110600")
 ```
 
 ## 예보구역코드 찾기

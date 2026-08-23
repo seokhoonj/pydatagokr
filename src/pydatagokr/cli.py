@@ -9,7 +9,7 @@ clean column schema offline. The fetch commands -- one per wrapped service: ``we
     $ datagokr fields weather forecast                             # offline
     $ datagokr weather forecast --nx 60 --ny 127                   # 최신 발표분
     $ datagokr airquality by_sido 서울
-    $ datagokr midforecast land --region 11B00000 --base-time 202608111800
+    $ datagokr midforecast land --regid 11B00000 --base-time 202608111800
     $ datagokr procurement services --begin 202608010000 --end 202608102359
     $ datagokr customs item_trade 8542 --begin 202401 --end 202406
 """
@@ -157,7 +157,7 @@ def _make_parser() -> argparse.ArgumentParser:
     for op, desc in (("apt_trade", "아파트 매매"), ("apt_trade_detail", "아파트 매매 상세"),
                      ("apt_rent", "아파트 전월세"), ("apt_presale", "아파트 분양권전매")):
         op_cmd = re_ops.add_parser(op, help=f"fetch {desc} 실거래가")
-        op_cmd.add_argument("region_code", metavar="LAWD_CD",
+        op_cmd.add_argument("lawd_code", metavar="LAWD_CD",
                             help="법정동 앞5자리 (예 종로구 11110)")
         op_cmd.add_argument("--deal-ym", required=True, metavar="YYYYMM", dest="deal_ym",
                             help="계약년월")
@@ -196,7 +196,7 @@ def _make_parser() -> argparse.ArgumentParser:
     mid_ops = mid_cmd.add_subparsers(required=True)
     for op, desc in (("land", "중기육상예보"), ("temperature", "중기기온예보")):
         op_cmd = mid_ops.add_parser(op, help=f"fetch {desc}")
-        op_cmd.add_argument("--region", required=True, metavar="REGID",
+        op_cmd.add_argument("--regid", required=True, metavar="REGID",
                             help="예보구역코드 (예 11B00000)")
         op_cmd.add_argument("--base-time", required=True, metavar="YYYYMMDDHHMM",
                             dest="base_time", help="발표시각 (0600/1800)")
@@ -298,7 +298,7 @@ def _run_holidays(args: argparse.Namespace) -> int:
 
 
 def _run_realestate(args: argparse.Namespace) -> int:
-    rows = RealEstate().fetch(args.operation, region_code=args.region_code,
+    rows = RealEstate().fetch(args.operation, lawd_code=args.lawd_code,
                               deal_ym=args.deal_ym)
     _emit(rows, args.json)
     return 0
@@ -329,7 +329,7 @@ def _run_airquality_by_station(args: argparse.Namespace) -> int:
 
 
 def _run_midforecast(args: argparse.Namespace) -> int:
-    rows = MidForecast().fetch(args.operation, region_code=args.region, base_time=args.base_time)
+    rows = MidForecast().fetch(args.operation, regid=args.regid, base_time=args.base_time)
     _emit(rows, args.json)
     return 0
 

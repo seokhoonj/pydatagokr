@@ -4,7 +4,7 @@
 
     client = DataGoKr()                    # or set DATAGOKR_API_KEY (the *decoding* key)
     rows   = client.weather.forecast(base_date="20260811", base_time="0500", nx=60, ny=127)
-    trades = client.realestate.apt_trade(region_code="11110", deal_ym="202401")
+    trades = client.realestate.apt_trade(lawd_code="11110", deal_ym="202401")
 
 One key, many services: the shared :class:`DataGoKrSession` speaks the portal's common
 envelope and paging protocol, and each wrapped agency -- 기상청 동네예보, 에어코리아 대기오염,
