@@ -25,7 +25,7 @@ A data.go.kr **decoding** key must be configured (env `DATAGOKR_API_KEY` or
 ## Running
 
 ```
-datagokr customs item_trade <HS> --begin YYYYMM --end YYYYMM [--json]
+datagokr customs item_trade <HS> --start YYYYMM --end YYYYMM [--json]
 ```
 
 ## Procedure
@@ -34,7 +34,7 @@ datagokr customs item_trade <HS> --begin YYYYMM --end YYYYMM [--json]
    2-, 4-, 6-, or 10-digit prefixes narrow or widen the item.
 2. **Run.**
    ```bash
-   datagokr customs item_trade 8542 --begin 202401 --end 202406
+   datagokr customs item_trade 8542 --start 202401 --end 202406
    ```
    Add `--json` when the user wants machine-readable data.
 3. **Relay the result.** Show the CLI's stdout (the clean columns above).

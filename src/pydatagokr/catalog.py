@@ -88,7 +88,9 @@ def operations(service: str) -> list[str]:
 
 def fields(service: str, operation: str) -> list[FieldSpec]:
     """One operation's clean column schema: a dict per field with its vendor ``token``,
-    clean ``column``, ``kind``, and ``is_key`` flag, in table order.
+    clean ``column``, ``kind``, ``is_key`` flag, and ``required`` flag (whether
+    :func:`~pydatagokr.clean` drops a row when the field is missing -- the flag that
+    actually governs nullability; see :class:`FieldSpec`), in table order.
 
         catalog.fields("kofia", "market_funds")   # -> [{"token": "basDt", ...}, ...]
 

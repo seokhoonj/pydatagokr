@@ -230,6 +230,45 @@ def test_customs_item_trade_requires_the_range(keyed_env):
     assert exc.value.code == 2
 
 
+# --- fetch-dispatch paths for the XML services (arg forwarding + render + exit 0) ---------
+# These three subcommands wire argparse straight into the service; a rename that moves a flag
+# or its dest (as the recent --regid/--time-forecast/--start sweep did) would break the glue
+# while the service-level tests stayed green. Each asserts the forwarded filters reach the
+# vendor URL, the row renders cleaned, and the exit code is 0.
+
+def test_holidays_dispatches_year_and_month_and_cleans(capsys, keyed_env, monkeypatch):
+    urls = _fake_opener(monkeypatch, _xml_envelope(
+        [{"dateKind": "01", "dateName": "1월1일", "isHoliday": "Y",
+          "locdate": "20260101", "seq": "1"}], total=1))
+    assert main(["holidays", "--year", "2026", "--month", "1"]) == 0
+    out = capsys.readouterr().out
+    assert "is_holiday" in out and "2026-01-01" in out       # cleaned column + parsed date
+    assert "solYear=2026" in urls[0] and "solMonth=01" in urls[0]
+
+
+def test_realestate_dispatches_lawd_code_and_deal_ym_and_cleans(capsys, keyed_env, monkeypatch):
+    urls = _fake_opener(monkeypatch, _xml_envelope(
+        [{"dealYear": "2024", "dealMonth": "1", "dealDay": "19", "sggCd": "11110",
+          "umdNm": "숭인동", "jibun": "766", "aptNm": "종로청계힐스테이트",
+          "excluUseAr": "84.9478", "floor": "13", "buildYear": "2009",
+          "dealAmount": "101,300"}], total=1))
+    assert main(["realestate", "apt_trade", "11110", "--deal-ym", "202401"]) == 0
+    out = capsys.readouterr().out
+    assert "lawd_code" in out and "2024-01-19" in out        # renamed column + synthesized date
+    assert "LAWD_CD=11110" in urls[0] and "DEAL_YMD=202401" in urls[0]
+
+
+def test_midforecast_dispatches_regid_and_time_forecast_and_cleans(capsys, keyed_env, monkeypatch):
+    urls = _fake_opener(monkeypatch, _xml_envelope(
+        [{"regId": "11B00000", "rnSt5Am": "20", "wf5Am": "구름많음"}], total=1))
+    assert main(["midforecast", "land", "--regid", "11B00000",
+                 "--time-forecast", "202608111800"]) == 0
+    out = capsys.readouterr().out
+    assert "regid" in out and "precip_prob_5am" in out       # renamed column + cleaned field
+    assert "regId=11B00000" in urls[0] and "tmFc=202608111800" in urls[0]
+    assert "dataType=XML" in urls[0]
+
+
 # --- procurement / airquality closed-value flags -----------------------------
 
 def test_procurement_rejects_an_invalid_query_basis():

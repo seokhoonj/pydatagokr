@@ -11,8 +11,8 @@ next ~3 days on a 5km grid, this covers days 4-10 for a coarser 예보구역 nam
 
 | operation | 예보 | clean columns |
 |---|---|---|
-| `land` | 중기육상예보 | `region_code`, `precip_prob_4am`..`precip_prob_10` (강수확률 %, int), `sky_4am`..`sky_10` (날씨 문구) |
-| `temperature` | 중기기온예보 | `region_code`, `temp_min_4`..`temp_min_10`, `temp_max_4`..`temp_max_10` (℃, int) |
+| `land` | 중기육상예보 | `regid`, `precip_prob_4am`..`precip_prob_10` (강수확률 %, int), `sky_4am`..`sky_10` (날씨 문구) |
+| `temperature` | 중기기온예보 | `regid`, `temp_min_4`..`temp_min_10`, `temp_max_4`..`temp_max_10` (℃, int) |
 
 Days 4-7 split into morning/afternoon (`_4am`/`_4pm` .. `_7am`/`_7pm`); days 8-10 are
 single (`_8`..`_10`). A day the announcement does not cover is `None` (the 1800 announcement
@@ -33,14 +33,14 @@ MidFcstInfoService) applied for (활용신청) on that account.
 ## Running
 
 ```
-datagokr midforecast land        --region REGID --base-time YYYYMMDDHHMM [--json]
-datagokr midforecast temperature --region REGID --base-time YYYYMMDDHHMM [--json]
+datagokr midforecast land        --regid REGID --time-forecast YYYYMMDDHHMM [--json]
+datagokr midforecast temperature --regid REGID --time-forecast YYYYMMDDHHMM [--json]
 ```
 
-- `--region`: the 예보구역코드. 육상 uses a 광역 code (`11B00000` 서울/인천/경기, `11H20000`
+- `--regid`: the 예보구역코드. 육상 uses a 광역 code (`11B00000` 서울/인천/경기, `11H20000`
   부산/울산/경남, ...); 기온 uses a 도시 code (`11B10101` 서울, `11H20201` 부산, ...). Ask if
   unsure; do not guess a code.
-- `--base-time`: the 발표시각 as `YYYYMMDDHHMM`, issued at 0600 and 1800 (e.g. `202608111800`).
+- `--time-forecast`: the 발표시각 as `YYYYMMDDHHMM`, issued at 0600 and 1800 (e.g. `202608111800`).
 
 ## Procedure
 
@@ -50,7 +50,7 @@ datagokr midforecast temperature --region REGID --base-time YYYYMMDDHHMM [--json
    (today or yesterday at 0600/1800).
 2. **Run.**
    ```bash
-   datagokr midforecast land --region 11B00000 --base-time 202608111800
+   datagokr midforecast land --regid 11B00000 --time-forecast 202608111800
    ```
    Add `--json` for machine-readable data.
 3. **Relay the result.** Read the day columns in order; a `None` day was outside the

@@ -70,7 +70,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     except BrokenPipeError:
         # A downstream reader closed the pipe early (`datagokr ... | head`). Redirect stdout to
         # devnull so Python's shutdown flush does not re-raise, then exit conventionally.
-        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        os.close(devnull)
         return 1
 
 
@@ -245,8 +247,8 @@ def _run_fields(args: argparse.Namespace) -> int:
 
 
 def _run_grid(args: argparse.Namespace) -> int:
-    g = latlon_to_grid(args.lat, args.lon)
-    print(json.dumps({"nx": g.nx, "ny": g.ny}) if args.json else f"{g.nx} {g.ny}")
+    grid = latlon_to_grid(args.lat, args.lon)
+    print(json.dumps({"nx": grid.nx, "ny": grid.ny}) if args.json else f"{grid.nx} {grid.ny}")
     return 0
 
 

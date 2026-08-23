@@ -6,7 +6,7 @@ description: "Fetch 국토교통부 아파트 실거래가 (apartment real-trans
 # datagokr — 국토교통부 아파트 실거래가
 
 Fetch a 시군구's apartment transactions for one 계약년월. Clean columns include `deal_date`,
-`apt_name`, `exclusive_area` (m²), `floor`, `region_code`, `dong`, `jibun`, `build_year` --
+`apt_name`, `exclusive_area` (m²), `floor`, `lawd_code`, `dong`, `jibun`, `build_year` --
 and, by operation: `deal_amount_manwon` (거래금액, **만원**) for sale/presale, or
 `deposit_manwon`/`monthly_rent_manwon` (보증금·월세, **만원**) for rent.
 

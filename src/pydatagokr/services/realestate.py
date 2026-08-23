@@ -32,7 +32,7 @@ BASE_URL = "https://apis.data.go.kr/1613000"
 # synthesized from the vendor's dealYear/dealMonth/dealDay before cleaning (see _deal_date).
 _SALE_CORE = (
     Field("dealDate",        "deal_date",       "date_ymd", is_key=True),   # 계약일
-    Field("sggCd",           "lawd_code",     "text", is_key=True),       # 법정동 시군구코드
+    Field("sggCd",           "lawd_code",       "text", is_key=True),       # 법정동 시군구코드
     Field("umdNm",           "dong",            "text", is_key=True),       # 법정동명
     Field("jibun",           "jibun",           "text", is_key=True),       # 지번
     Field("aptNm",           "apt_name",        "text", is_key=True),       # 단지명
@@ -71,20 +71,20 @@ APT_TRADE_DETAIL = Table(
     Field("roadNmBonbun",    "road_main_no",    "text"),
     Field("roadNmBubun",     "road_sub_no",     "text"),
     Field("roadNmSeq",       "road_seq",        "text"),
-    Field("roadNmSggCd",     "road_sgg_code", "text"),
+    Field("roadNmSggCd",     "road_sgg_code",   "text"),
     Field("roadNmbCd",       "road_basement_yn", "text"),
 ), is_wide_key=True)
 
 APT_PRESALE = Table("apt_presale", "RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade",
                     _SALE_CORE + (
     Field("ownershipGbn",    "ownership_type",  "text"),                    # 권리구분(분양/입주권)
-    Field("sggNm",           "sgg_name",     "text"),                    # 시군구명
+    Field("sggNm",           "sgg_name",        "text"),                    # 시군구명
 ), is_wide_key=True)
 
 APT_RENT = Table("apt_rent", "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
                  (
     Field("dealDate",        "deal_date",       "date_ymd", is_key=True),
-    Field("sggCd",           "lawd_code",     "text", is_key=True),
+    Field("sggCd",           "lawd_code",       "text", is_key=True),
     Field("umdNm",           "dong",            "text", is_key=True),
     Field("jibun",           "jibun",           "text", is_key=True),
     Field("aptNm",           "apt_name",        "text", is_key=True),
@@ -104,7 +104,7 @@ APT_RENT = Table("apt_rent", "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
     Field("roadnmbonbun",    "road_main_no",    "text"),
     Field("roadnmbubun",     "road_sub_no",     "text"),
     Field("roadnmseq",       "road_seq",        "text"),
-    Field("roadnmsggcd",     "road_sgg_code", "text"),
+    Field("roadnmsggcd",     "road_sgg_code",   "text"),
     Field("roadnmbcd",       "road_basement_yn", "text"),
 ), is_wide_key=True)
 
