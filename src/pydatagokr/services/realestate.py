@@ -227,7 +227,7 @@ class RealEstate:
             table = TABLES[name]
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
-        rows = self._session.fetch(table.operation, LAWD_CD=lawd_code, DEAL_YMD=deal_ym)
+        rows = self._session.fetch(table.endpoint, LAWD_CD=lawd_code, DEAL_YMD=deal_ym)
         if not clean:
             return rows
         for row in rows:

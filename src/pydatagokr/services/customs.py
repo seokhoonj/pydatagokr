@@ -27,7 +27,7 @@ BASE_URL = "https://apis.data.go.kr/1220000/Itemtrade"
 
 ITEM_TRADE = Table(
     name="item_trade",
-    operation="getItemtradeList",
+    endpoint="getItemtradeList",
     fields=(
         Field("year",        "period",            "date_ym", is_key=True),   # "2026.01" -> "2026-01"
         Field("hsCode",      "hs_code",           "text", is_key=True),
@@ -72,7 +72,7 @@ class Customs:
         """품목별 수출입실적 (``getItemtradeList``) for one HS code, monthly over
         ``start``/``end`` = YYYYMM. ``clean=True`` (the default) returns typed snake_case
         rows through :data:`ITEM_TRADE`; ``clean=False`` the raw vendor rows."""
-        rows = self._session.fetch(ITEM_TRADE.operation,
+        rows = self._session.fetch(ITEM_TRADE.endpoint,
                                    strtYymm=start, endYymm=end, hsSgn=hs_code)
         return _spec.clean(rows, ITEM_TRADE) if clean else rows
 

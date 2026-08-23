@@ -213,7 +213,7 @@ class KOFIA:
             table = TABLES[name]
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
-        rows = self._session.fetch(table.operation, num_of_rows=num_of_rows,
+        rows = self._session.fetch(table.endpoint, num_of_rows=num_of_rows,
                                    **_date_filters(table, begin, end))
         return _spec.clean(rows, table) if clean else rows
 

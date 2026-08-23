@@ -195,7 +195,7 @@ class Weather:
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
         base_date, base_time = _resolve_base(name, base_date, base_time)
-        rows = self._session.fetch(table.operation, base_date=base_date, base_time=base_time,
+        rows = self._session.fetch(table.endpoint, base_date=base_date, base_time=base_time,
                                    nx=str(nx), ny=str(ny))
         return _spec.clean(rows, table) if clean else rows
 

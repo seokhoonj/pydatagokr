@@ -47,14 +47,15 @@ class Field:
 
 @dataclass(frozen=True, slots=True)
 class Table:
-    """One operation's clean table: its name, the vendor operation path, its fields, and
+    """One operation's clean table: its ``name`` (the friendly operation name), its
+    ``endpoint`` (the vendor operation's URL path segment), its fields, and
     whether it uses no composite natural primary key -- because the key would be too wide, or
     the rows are wide/product-level -- so a store keys on a surrogate id + per-period replace.
     Under that flag :func:`clean` keeps a row whose key dimension is missing (as ``None``)
     rather than dropping it, since the surrogate id, not the key, identifies the row."""
 
     name:        str
-    operation:   str
+    endpoint:    str
     fields:      tuple[Field, ...]
     is_wide_key: bool = False   # True -> surrogate id + per-period replace, not a composite PK
 

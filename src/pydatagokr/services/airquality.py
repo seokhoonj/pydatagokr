@@ -93,7 +93,7 @@ class AirQuality:
         """시도별 실시간 측정정보 (``getCtprvnRltmMesureDnsty``) -- every station in ``sido``
         (서울/부산/경기/...) at the latest time. ``clean=True`` (the default) returns typed
         rows; ``clean=False`` raw."""
-        rows = self._session.fetch(BY_SIDO.operation, sidoName=sido, ver=ver)
+        rows = self._session.fetch(BY_SIDO.endpoint, sidoName=sido, ver=ver)
         return _spec.clean(rows, BY_SIDO) if clean else rows
 
     @overload
@@ -110,7 +110,7 @@ class AirQuality:
         """측정소별 실시간 측정정보 (``getMsrstnAcctoRltmMesureDnsty``) for one ``station``
         over ``data_term`` (``DAILY`` / ``MONTH`` / ``3MONTH``). ``clean`` as
         :meth:`by_sido`."""
-        rows = self._session.fetch(BY_STATION.operation, stationName=station,
+        rows = self._session.fetch(BY_STATION.endpoint, stationName=station,
                                    dataTerm=data_term, ver=ver)
         return _spec.clean(rows, BY_STATION) if clean else rows
 

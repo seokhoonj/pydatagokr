@@ -130,7 +130,7 @@ class MidForecast:
             table = TABLES[name]
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
-        rows = self._session.fetch(table.operation, dataType="XML",
+        rows = self._session.fetch(table.endpoint, dataType="XML",
                                    regId=regid, tmFc=time_forecast)
         return _spec.clean(rows, table) if clean else rows
 

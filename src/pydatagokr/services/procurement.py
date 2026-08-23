@@ -162,7 +162,7 @@ class Procurement:
             table = TABLES[name]
         except KeyError:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}") from None
-        rows = self._session.fetch(table.operation, type="xml", inqryDiv=query_basis,
+        rows = self._session.fetch(table.endpoint, type="xml", inqryDiv=query_basis,
                                    inqryBgnDt=begin, inqryEndDt=end)
         return _spec.clean(rows, table) if clean else rows
 
