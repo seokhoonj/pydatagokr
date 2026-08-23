@@ -653,6 +653,19 @@ def test_over_collected_paging_refuses_to_return_duplicates():
         session.fetch("getThing", num_of_rows=2)
 
 
+def test_re_served_page_at_exact_multiple_totalcount_refuses_duplicates():
+    # A vendor that ignores pageNo re-serves the same full page; when its declared totalCount
+    # is an EXACT MULTIPLE of the page size, collecting lands on len(rows) == total, so the
+    # over-count (> total) guard never fires. A final page identical to the one before is the
+    # re-serve signal, refused here instead of returning a silently duplicated result.
+    opener = _InfiniteOpener(_envelope([{"n": "1"}, {"n": "2"}], total=4))
+    session = DataGoKrSession(_BASE, _KEY, opener=opener)
+    with pytest.raises(DataGoKrPagingError) as exc:
+        session.fetch("getThing", num_of_rows=2)
+    assert "getThing" in str(exc.value)
+    assert len(opener.requests) == 2                        # caught on the re-served 2nd page
+
+
 def test_mid_stream_no_data_page_reports_truncation_not_over_count():
     # A service reports totalCount, then answers a later page with resultCode 03 (no data)
     # before the count is reached. Refusing is right, but a no-data page carries no

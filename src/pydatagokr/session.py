@@ -203,6 +203,7 @@ class DataGoKrSession:
                 f"(serviceKey/numOfRows/pageNo and the JSON flag are set by the session)")
         rows: list[Row] = []
         total: int | None = None
+        previous_page: list[Row] | None = None
         for page in range(1, _PAGE_CAP + 1):
             page_rows, page_total = self._fetch_page(operation, page, num_of_rows, filters)
             rows.extend(page_rows)
@@ -227,6 +228,14 @@ class DataGoKrSession:
                             f"data.go.kr returned more rows than its declared totalCount "
                             f"({len(rows)} > {total}) for {operation}; refusing a possibly "
                             f"duplicated result")
+                    if page_rows and page_rows == previous_page:
+                        # Exact landing (len == total): the > total guard above cannot see a
+                        # re-served page here. A final page identical to the one before is that
+                        # re-serve (a vendor ignoring pageNo, with totalCount an exact multiple
+                        # of the page size), so the "complete" result is duplicated -- refuse it.
+                        raise DataGoKrPagingError(
+                            f"data.go.kr re-served an identical page for {operation} at its "
+                            f"declared totalCount (pageNo ignored); refusing a duplicated result")
                     return rows                    # collected exactly the declared count
                 if not page_rows:
                     # An empty page BEFORE the declared count is reached is a broken vendor
@@ -238,6 +247,7 @@ class DataGoKrSession:
                         f"possibly truncated result")
             elif not page_rows or len(page_rows) < num_of_rows:
                 return rows                        # no count: a short/empty page is the end
+            previous_page = page_rows
         # The cap was reached without any last-page signal: rather than silently return a
         # truncated result that looks complete, refuse it. The message carries the
         # operation path only (never the key-bearing query string).
