@@ -143,8 +143,8 @@ def _date_filters(table: Table, begin: str | None, end: str | None) -> dict[str,
     width = 6 if date_field.kind == "date_ym" else 8
     lo = begin[:width] if begin else None
     hi = end[:width] + "9" if end else None
-    cap = date_field.token[0].upper() + date_field.token[1:]
-    return {f"begin{cap}": lo, f"end{cap}": hi}
+    token_cap = date_field.token[0].upper() + date_field.token[1:]
+    return {f"begin{token_cap}": lo, f"end{token_cap}": hi}
 
 
 class KOFIA:
