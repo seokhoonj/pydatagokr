@@ -103,3 +103,12 @@ def test_temp_region_ambiguous_message_gives_the_code_to_use():
         temp_region("광주")
     msg = str(exc.value)
     assert "11B20702" in msg and "11F20501" in msg and "regid=" in msg
+
+
+def test_land_region_resolves_a_non_leading_compound_zone_member():
+    # One land zone names several regions in one entry ("서울.인천.경기"). Every member must
+    # resolve to that zone's code, not only the leading "서울" -- matching the whole name by
+    # prefix dropped "인천"/"경기", which are not a prefix of the compound string.
+    assert land_region("서울") == "11B00000"
+    assert land_region("인천") == "11B00000"
+    assert land_region("경기") == "11B00000"

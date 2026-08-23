@@ -84,10 +84,16 @@ def _resolve_named(query: str, table: tuple[tuple[str, str], ...], label: str) -
     # expansion it falls through to a match that lands INSIDE an unrelated name: "경북" is a
     # substring of "함경북도", which silently resolved 경상북도 to a North Korean zone. Expand via
     # the same alias table lawd_code uses -- its targets ("경상북도", "충청북도") are exactly the
-    # names LAND_ZONES/TEMP_CITIES carry -- then match by prefix, never by interior substring.
+    # names LAND_ZONES/TEMP_CITIES carry -- then match a member, never an interior substring.
     resolved = _SIDO_ALIAS.get(normalized, normalized)
-    exact = [(name, code) for (name, code) in table if name == resolved]
-    candidates = exact or [(name, code) for (name, code) in table if name.startswith(resolved)]
+    # One zone can name several regions in a single entry ("서울.인천.경기"); split on the dot so
+    # every member ("인천", "경기") resolves, not only the leading one. An exact member wins
+    # outright; otherwise a member-prefix match ("강원" -> 강원영동/영서). Prefix is anchored to a
+    # member start, so "경북" still cannot land inside "함경북도".
+    exact = [(name, code) for (name, code) in table
+             if any(member == resolved for member in name.split("."))]
+    candidates = exact or [(name, code) for (name, code) in table
+                           if any(member.startswith(resolved) for member in name.split("."))]
     if not candidates:
         raise ValueError(f"no {label} matches {query!r}")
     if len(candidates) > 1:
