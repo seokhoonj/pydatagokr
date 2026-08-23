@@ -128,16 +128,21 @@ TABLES: dict[str, Table] = {table.name: table for table in (
 def _date_filters(table: Table, begin: str | None, end: str | None) -> dict[str, str | None]:
     """The vendor's begin/end query params for fetching ``table``, derived from its date
     field: the field's own vendor token gives the param base -- ``beginBasDt``/``endBasDt``
-    (daily) or ``beginBasYm``/``endBasYm`` -- and a monthly cycle (a ``date_ym`` date field)
-    takes the YYYYMM prefix of a YYYYMMDD bound. A ``None`` bound stays ``None`` (the session
-    omits it). Kept beside the KOFIA tables so a consumer never re-derives the vendor names."""
+    (daily) or ``beginBasYm``/``endBasYm``. A ``None`` bound stays ``None`` (the session omits
+    it). Kept beside the KOFIA tables so a consumer never re-derives the vendor names.
+
+    The vendor compares the bounds against a fixed-width ``basDt`` STRING (YYYYMMDD daily,
+    YYYYMM monthly) as a half-open range -- ``begin <= basDt < end`` -- verified live for
+    every operation. So each bound is normalised to the field's width, and the end is pushed
+    up one sort step (a trailing ``9``) to make the caller's ``end`` inclusive; otherwise the
+    last day/month, and a ``begin == end`` single-point query, are silently dropped."""
     date_field = next(
         (field for field in table.fields if field.kind.startswith("date")), None)
     if date_field is None:
         return {}   # a table with no date field takes no begin/end bounds
-    monthly = date_field.kind == "date_ym"
-    lo = begin[:6] if (monthly and begin) else begin
-    hi = end[:6] if (monthly and end) else end
+    width = 6 if date_field.kind == "date_ym" else 8
+    lo = begin[:width] if begin else None
+    hi = end[:width] + "9" if end else None
     cap = date_field.token[0].upper() + date_field.token[1:]
     return {f"begin{cap}": lo, f"end{cap}": hi}
 

@@ -1,5 +1,6 @@
 """KOFIA -- every operation's typed row, its vendor path, and the right date-bound param
-(daily basDt vs monthly basYm, bounds truncated to YYYYMM), over the JSON session, offline."""
+(daily basDt / monthly basYm, each bound normalised to the field width and the end pushed
+one sort step up so the caller's end is inclusive), over the JSON session, offline."""
 
 import json
 import urllib.parse
@@ -47,8 +48,9 @@ def _kofia(raw):
 
 
 # (operation name, one representative raw row, its exact cleaned row, the vendor operation
-# path, the begin/end bound params) -- the daily tables filter on basDt (full YYYYMMDD), the
-# monthly ones on their date field's token truncated to YYYYMM (basYm for 신탁규모, basDt else).
+# path, the begin/end bound params) -- daily tables filter on basDt at width 8, monthly ones
+# on their date token at width 6 (basYm for 신탁규모, basDt else); the end bound (called with
+# end="20240315") carries the trailing '9' that makes the vendor's exclusive upper inclusive.
 _CASES = [
     (
         "market_funds",
@@ -59,7 +61,7 @@ _CASES = [
          "customer_rp_sale_balance": 200, "brokerage_receivable": 30,
          "forced_sell_amount": 77, "forced_sell_to_receivable_ratio": 8.5},
         "getSecuritiesMarketTotalCapitalInfo",
-        "beginBasDt=20240131", "endBasDt=20240315",
+        "beginBasDt=20240131", "endBasDt=202403159",
     ),
     (
         "credit_balance",
@@ -70,7 +72,7 @@ _CASES = [
          "margin_loan_kosdaq": 400, "stock_loan_total": 50, "stock_loan_kospi": 30,
          "stock_loan_kosdaq": 20, "subscription_loan": 5, "collateral_loan": 90},
         "getGrantingOfCreditBalanceInfo",
-        "beginBasDt=20240131", "endBasDt=20240315",
+        "beginBasDt=20240131", "endBasDt=202403159",
     ),
     (
         "fund_net_asset",
@@ -78,7 +80,7 @@ _CASES = [
         {"base_date": "2024-01-31", "fund_type": "PEF", "offering_type": "공모",
          "net_asset_total": 9999},
         "getFundTotalNetEssetInfo",
-        "beginBasDt=20240131", "endBasDt=20240315",
+        "beginBasDt=20240131", "endBasDt=202403159",
     ),
     (
         "cma_status",
@@ -87,7 +89,7 @@ _CASES = [
         {"base_date": "2024-01-31", "management_target": "RP형", "investor_type": "개인",
          "securities_firm_count": 10, "account_count": 1234, "account_balance": 5000},
         "getCMAStatus",
-        "beginBasDt=20240131", "endBasDt=20240315",
+        "beginBasDt=20240131", "endBasDt=202403159",
     ),
     (
         "trust_scale",
@@ -96,7 +98,7 @@ _CASES = [
         {"base_ym": "2024-01", "sector": "증권", "trust_type": "금전신탁",
          "trust_kind": "특정금전", "measure_basis": "수탁총액", "measure_value": 12345},
         "getTrustScaleInfo",
-        "beginBasYm=202401", "endBasYm=202403",
+        "beginBasYm=202401", "endBasYm=2024039",
     ),
     (
         "dls_dlb",
@@ -105,7 +107,7 @@ _CASES = [
         {"base_ym": "2024-01", "product_type": "합계", "offering_type": "공모",
          "status_type": "발행실적", "amount_krw": 9000, "deal_count": 12},
         "getDLSAndDLBInfo",
-        "beginBasDt=202401", "endBasDt=202403",
+        "beginBasDt=202401", "endBasDt=2024039",
     ),
     (
         "els_elb",
@@ -114,7 +116,7 @@ _CASES = [
         {"base_ym": "2024-01", "product_type": "ELS", "offering_type": "공모",
          "status_type": "발행실적", "amount_krw": 8000, "deal_count": 7},
         "getELSAndELBInfo",
-        "beginBasDt=202401", "endBasDt=202403",
+        "beginBasDt=202401", "endBasDt=2024039",
     ),
     (
         "overseas_derivatives",
@@ -126,7 +128,7 @@ _CASES = [
          "exchange": "CME", "contract_class": "옵션", "country": "미국",
          "underlying_asset_group": "통화선물", "trade_volume": 5, "trade_value_usd": 1000},
         "getDerivationProductTradingInfo",
-        "beginBasDt=202401", "endBasDt=202403",
+        "beginBasDt=202401", "endBasDt=2024039",
     ),
 ]
 
@@ -144,3 +146,41 @@ def test_every_operation_types_its_row_and_wires_the_bounds(
     for expected in (begin_param, end_param):         # exact value: a dropped YYYYMM
         key, value = expected.split("=")              # truncation ("...202401" vs "20240131")
         assert params[key] == [value]                 # would fail here, not pass on substring
+
+
+def _params(opener):
+    url = opener.requests[0].full_url
+    return urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+
+
+# The vendor filters basDt as a fixed-width STRING with an EXCLUSIVE upper bound
+# (basDt < end...), verified live for every operation, daily and monthly alike. So the
+# emitted end bound must sort strictly AFTER the caller's last wanted unit, or that unit
+# (and, for begin==end, the whole result) is silently dropped.
+@pytest.mark.parametrize("name,base,lo,hi", [
+    ("market_funds", "BasDt", "20240102", "202403159"),   # daily: width 8, end + '9'
+    ("credit_balance", "BasDt", "20240102", "202403159"),
+    ("dls_dlb", "BasDt", "202401", "2024039"),            # monthly basDt: width 6, end + '9'
+    ("els_elb", "BasDt", "202401", "2024039"),
+    ("overseas_derivatives", "BasDt", "202401", "2024039"),
+    ("trust_scale", "BasYm", "202401", "2024039"),        # monthly basYm
+])
+def test_end_bound_sorts_after_its_unit_so_the_last_unit_is_included(name, base, lo, hi):
+    kofia, opener = _kofia(_json([], 0))
+    kofia.fetch(name, begin="20240102", end="20240315")
+    params = _params(opener)
+    assert params[f"begin{base}"] == [lo]             # lower bound is inclusive as-is
+    assert params[f"end{base}"] == [hi]               # upper bound pushed one sort step up
+
+
+@pytest.mark.parametrize("name,base,point", [
+    ("market_funds", "BasDt", "20240102"),            # daily single day
+    ("dls_dlb", "BasDt", "202401"),                   # monthly single month
+    ("trust_scale", "BasYm", "202401"),
+])
+def test_single_point_query_spans_a_nonempty_range(name, base, point):
+    kofia, opener = _kofia(_json([], 0))
+    kofia.fetch(name, begin=point, end=point)         # begin == end must not be empty [x, x)
+    params = _params(opener)
+    lo, hi = params[f"begin{base}"][0], params[f"end{base}"][0]
+    assert lo <= point < hi                           # the point falls inside [lo, hi)
