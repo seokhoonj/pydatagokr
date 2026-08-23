@@ -9,7 +9,7 @@ clean column schema offline. The fetch commands -- one per wrapped service: ``we
     $ datagokr fields weather forecast                             # offline
     $ datagokr weather forecast --nx 60 --ny 127                   # 최신 발표분
     $ datagokr airquality by_sido 서울
-    $ datagokr midforecast land --regid 11B00000 --base-time 202608111800
+    $ datagokr midforecast land --regid 11B00000 --time-forecast 202608111800
     $ datagokr procurement services --begin 202608010000 --end 202608102359
     $ datagokr customs item_trade 8542 --begin 202401 --end 202406
 """
@@ -198,8 +198,8 @@ def _make_parser() -> argparse.ArgumentParser:
         op_cmd = mid_ops.add_parser(op, help=f"fetch {desc}")
         op_cmd.add_argument("--regid", required=True, metavar="REGID",
                             help="예보구역코드 (예 11B00000)")
-        op_cmd.add_argument("--base-time", required=True, metavar="YYYYMMDDHHMM",
-                            dest="base_time", help="발표시각 (0600/1800)")
+        op_cmd.add_argument("--time-forecast", required=True, metavar="YYYYMMDDHHMM",
+                            dest="time_forecast", help="발표시각 (0600/1800)")
         op_cmd.add_argument("--json", action="store_true", help="emit JSON instead of text")
         op_cmd.set_defaults(run=_run_midforecast, operation=op)
 
@@ -329,7 +329,8 @@ def _run_airquality_by_station(args: argparse.Namespace) -> int:
 
 
 def _run_midforecast(args: argparse.Namespace) -> int:
-    rows = MidForecast().fetch(args.operation, regid=args.regid, base_time=args.base_time)
+    rows = MidForecast().fetch(args.operation, regid=args.regid,
+                               time_forecast=args.time_forecast)
     _emit(rows, args.json)
     return 0
 

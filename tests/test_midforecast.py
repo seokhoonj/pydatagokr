@@ -64,7 +64,7 @@ def _mid(raw):
 
 def test_land_types_precip_int_and_sky_text():
     mid, _ = _mid(_xml([_LAND_ROW], 1))
-    row = mid.land(regid="11B00000", base_time="202608111800")[0]
+    row = mid.land(regid="11B00000", time_forecast="202608111800")[0]
     assert row["regid"] == "11B00000"
     assert row["precip_prob_5am"] == 20 and row["precip_prob_7pm"] == 60   # int
     assert row["sky_5am"] == "구름많음" and row["sky_8"] == "맑음"          # text
@@ -73,14 +73,14 @@ def test_land_types_precip_int_and_sky_text():
 
 def test_temperature_types_min_and_max():
     mid, _ = _mid(_xml([_TA_ROW], 1))
-    row = mid.temperature(regid="11B10101", base_time="202608111800")[0]
+    row = mid.temperature(regid="11B10101", time_forecast="202608111800")[0]
     assert row["temp_min_5"] == 26 and row["temp_max_5"] == 34
     assert row["temp_min_10"] == 24 and row["temp_max_10"] == 31
 
 
 def test_land_raw_passthrough_keeps_vendor_tokens():
     mid, _ = _mid(_xml([_LAND_ROW], 1))
-    assert mid.land(regid="11B00000", base_time="202608111800", clean=False) == [_LAND_ROW]
+    assert mid.land(regid="11B00000", time_forecast="202608111800", clean=False) == [_LAND_ROW]
 
 
 def test_0600_announcement_keeps_day_four_that_1800_omits():
@@ -89,18 +89,18 @@ def test_0600_announcement_keeps_day_four_that_1800_omits():
     # regression that dropped a present day-4 value could not hide behind the 1800 case.
     row_0600 = {"regId": "11B00000", "rnSt4Am": "10", "rnSt4Pm": "20", "wf4Am": "맑음"}
     mid, _ = _mid(_xml([row_0600], 1))
-    got_0600 = mid.land(regid="11B00000", base_time="202608110600")[0]
+    got_0600 = mid.land(regid="11B00000", time_forecast="202608110600")[0]
     assert got_0600["precip_prob_4am"] == 10 and got_0600["precip_prob_4pm"] == 20
     assert got_0600["sky_4am"] == "맑음"
 
     mid, _ = _mid(_xml([_LAND_ROW], 1))                 # the 1800 row omits day 4
-    got_1800 = mid.land(regid="11B00000", base_time="202608111800")[0]
+    got_1800 = mid.land(regid="11B00000", time_forecast="202608111800")[0]
     assert got_1800["precip_prob_4am"] is None and got_1800["sky_4am"] is None
 
 
 def test_operation_path_and_params_reach_the_vendor():
     mid, opener = _mid(_xml([], 0))
-    mid.land(regid="11B00000", base_time="202608111800")
+    mid.land(regid="11B00000", time_forecast="202608111800")
     query = opener.requests[0].full_url
     assert "getMidLandFcst" in query
     assert "regId=11B00000" in query
@@ -110,7 +110,7 @@ def test_operation_path_and_params_reach_the_vendor():
 
 def test_temperature_operation_path_and_params_reach_the_vendor():
     mid, opener = _mid(_xml([], 0))
-    mid.temperature(regid="11B10101", base_time="202608111800")
+    mid.temperature(regid="11B10101", time_forecast="202608111800")
     query = opener.requests[0].full_url
     assert "getMidTa" in query
     assert "regId=11B10101" in query
@@ -120,10 +120,10 @@ def test_temperature_operation_path_and_params_reach_the_vendor():
 
 def test_land_with_no_rows_returns_empty_list():
     mid, _ = _mid(_xml([], 0))
-    assert mid.land(regid="11B00000", base_time="202608111800") == []
+    assert mid.land(regid="11B00000", time_forecast="202608111800") == []
 
 
 def test_fetch_rejects_an_unknown_operation():
     mid, _ = _mid(_xml([], 0))
     with pytest.raises(ValueError, match="unknown operation"):
-        mid.fetch("sea", regid="11B00000", base_time="202608111800")
+        mid.fetch("sea", regid="11B00000", time_forecast="202608111800")
