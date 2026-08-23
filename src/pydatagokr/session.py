@@ -190,17 +190,28 @@ class DataGoKrSession:
         Filter values (date bounds, an HS code, ...) are passed to the vendor unvalidated:
         the vendor is the authority on its own filter grammar, so this transport checks
         only its own inputs (e.g. the timeout, the page size) and forwards the filters as given.
+
+        Raises ``ValueError`` for a non-positive ``num_of_rows`` or a filter whose name
+        collides with a transport-managed query parameter; ``DataGoKrPagingError`` when the
+        vendor's paging breaks (an empty or re-served page before the declared count, or no
+        last-page signal within the page cap); other :class:`DataGoKrError` subclasses on a
+        transport failure or a vendor error/auth/rate-limit envelope.
         """
         if isinstance(num_of_rows, bool) or not isinstance(num_of_rows, int) or num_of_rows <= 0:
             raise ValueError("num_of_rows must be a positive integer")
-        # serviceKey / numOfRows / pageNo (and the JSON flag) are set by the transport itself;
-        # a filter of the same name would overwrite them -- e.g. pageNo would pin every request
-        # to one page and silently accumulate duplicate rows -- so reject the collision loudly.
-        reserved = {"serviceKey", "numOfRows", "pageNo", self._json_param} & filters.keys()
+        # serviceKey / numOfRows / pageNo are set by the transport itself; a filter of the same
+        # name would overwrite them -- e.g. pageNo would pin every request to one page and
+        # silently accumulate duplicate rows -- so reject the collision loudly. The JSON flag
+        # joins that set only in json mode, since an xml session never sends it: there, a vendor
+        # filter that happens to share the flag's name is legitimate and passes through.
+        managed = {"serviceKey", "numOfRows", "pageNo"}
+        if self._response_format == "json":
+            managed.add(self._json_param)
+        reserved = managed & filters.keys()
         if reserved:
             raise ValueError(
                 f"filter {sorted(reserved)} collides with a transport-managed query parameter "
-                f"(serviceKey/numOfRows/pageNo and the JSON flag are set by the session)")
+                f"(the session sets {', '.join(sorted(managed))})")
         rows: list[Row] = []
         total: int | None = None
         previous_page: list[Row] | None = None

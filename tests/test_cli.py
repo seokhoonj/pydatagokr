@@ -143,6 +143,15 @@ def test_display_width_counts_hangul_as_two_cells():
     assert _pad("서울", 5) == "서울 "                                   # aligned to 5 cells
 
 
+def test_render_rows_unions_columns_absent_from_the_first_row():
+    from pydatagokr.cli import _render_rows
+    # A heterogeneous raw (clean=False) response: the 2nd row carries a column the 1st lacks.
+    # The text header must union the keys, not key on row 0 alone and silently drop the column.
+    table = _render_rows([{"a": "1"}, {"a": "2", "b": "extra"}])
+    assert "b" in table.splitlines()[0]              # the extra column is in the header
+    assert "extra" in table
+
+
 def _raise_broken_pipe(args):
     raise BrokenPipeError
 

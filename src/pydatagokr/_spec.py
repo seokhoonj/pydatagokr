@@ -159,7 +159,7 @@ def _text(raw: object) -> str | None:
 
 
 def _integer(raw: object) -> int | None:
-    """An amount or count string to an exact int (blank/``"-"``/``"nan"`` -> None). The
+    """An amount or count string to an exact int (blank/``"-"``/``"None"``/``"nan"`` -> None). The
     plain integer path is exact for any magnitude; a decimal-formatted value
     (``"1234.0"``) is accepted only if integral, and a genuinely fractional one
     (``"3.8"``) -- a contract breach, these are integer won/counts -- becomes None rather
@@ -197,7 +197,7 @@ def _integer(raw: object) -> int | None:
 
 
 def _ratio(raw: object) -> float | None:
-    """A percent string to a float (blank/``"-"``/``"nan"``/non-finite -> None)."""
+    """A percent string to a float (blank/``"-"``/``"None"``/``"nan"``/non-finite -> None)."""
     text = str(raw).replace(",", "").strip()
     if not text or text in ("-", "None", "nan") or not text.isascii():
         # float() accepts non-ASCII decimal digits (Arabic-Indic, full-width); a real
@@ -213,7 +213,7 @@ def _ratio(raw: object) -> float | None:
 
 
 def _decimal(raw: object) -> float | None:
-    """A decimal measure (area, coordinate, ...) to a float; blank/``"-"``/``"nan"``/
+    """A decimal measure (area, coordinate, ...) to a float; blank/``"-"``/``"None"``/``"nan"``/
     non-finite -> None. Same parsing as :func:`_ratio`, kept a distinct kind so the schema
     reads honestly -- 전용면적 is a measure, not a percentage."""
     return _ratio(raw)

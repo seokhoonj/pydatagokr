@@ -162,11 +162,16 @@ _MATRIX = [
     (_YMD, "",         _DROP),
     (_YMD, "-",        _DROP),
     (_YMD, "20241301", _DROP),   # invalid month
+    (_YMD, "20240229", "2024-02-29"),  # leap day in a leap year is valid
+    (_YMD, "20230229", _DROP),   # Feb 29 in a non-leap year is dropped
     (_YMD, "2024-01-05", _DROP), # separators -> not 8 digits
     (_YMD, "1,234",    _DROP),
     # date_ym: 6 digits after stripping separators, else dropped
     (_YM, "202401", "2024-01"),
+    (_YM, "202412", "2024-12"),   # December, the upper valid month boundary
     (_YM, "2026.01", "2026-01"),  # dotted customs form
+    (_YM, "202400",  _DROP),      # month 00 is not a valid month
+    (_YM, "202413",  _DROP),      # month 13 is not a valid month
     (_YM, None,      _DROP),
     (_YM, "",        _DROP),
     (_YM, "-",       _DROP),
@@ -176,6 +181,9 @@ _MATRIX = [
     (_INT, "1234",   1234),
     (_INT, "1,234",  1234),
     (_INT, "1234.0", 1234),       # decimal-formatted integer
+    (_INT, "1e3",    1000),       # scientific notation that is integral is accepted
+    (_INT, "3.0e2",  300),        # scientific notation, integral value
+    (_INT, "3.8e0",  None),       # scientific notation with a fractional value -> None
     (_INT, "3.8",    None),       # a real fraction is not an integer won/count
     (_INT, None,     None),
     (_INT, "",       None),

@@ -133,7 +133,7 @@ class DataGoKrRateLimitError(DataGoKrResponseError):
         super().__init__(code, message)
 
 
-def _error_for(code: str, message: str) -> DataGoKrError:
+def _error_for(code: str, message: str) -> DataGoKrResponseError:
     """Build the most specific error for a data.go.kr envelope code.
 
     Serves both envelope shapes: the portal's ``returnReasonCode`` (error-B) and a

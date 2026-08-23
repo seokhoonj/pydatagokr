@@ -279,6 +279,18 @@ def test_reserved_filter_name_is_rejected(reserved):
         session.fetch("getThing", **{reserved: "1"})
 
 
+def test_json_flag_name_is_reserved_only_in_json_mode():
+    # The JSON flag is a transport-managed param only when it is actually sent (json mode);
+    # an xml session never sends it, so a vendor filter that happens to share its name must
+    # pass through rather than be rejected on a param the request will not carry.
+    xml_session, opener = _session(_xml_envelope([], total=0), response_format="xml")
+    xml_session.fetch("getThing", resultType="something")   # not rejected in xml mode
+    assert "resultType=something" in opener.requests[0].full_url
+    json_session, _ = _session(_envelope([], total=0))
+    with pytest.raises(ValueError, match="transport-managed"):
+        json_session.fetch("getThing", resultType="1")      # still rejected in json mode
+
+
 def test_rate_limit_error_carries_retry_after_seconds():
     headers = Message()
     headers["Retry-After"] = "12"
@@ -303,8 +315,11 @@ def test_non_object_row_raises():
 
 # --- error-A: the service's own resultCode -----------------------------------
 
-def test_no_data_result_code_is_empty_not_error():
-    session, _ = _session(_envelope(None, code="03", message="NODATA_ERROR"))
+@pytest.mark.parametrize("code", ["03", "003", "3"])
+def test_no_data_result_code_is_empty_not_error(code):
+    # The no-data code is compared on its significant digits, so a 2-digit "03", a 3-digit
+    # zero-padded "003" (국토부 RTMS style), and a bare "3" all read as an empty series.
+    session, _ = _session(_envelope(None, code=code, message="NODATA_ERROR"))
     assert session.fetch("getThing") == []
 
 

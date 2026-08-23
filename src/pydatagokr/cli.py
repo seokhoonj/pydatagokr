@@ -362,8 +362,11 @@ def _render_rows(rows: Sequence[Mapping[str, object]]) -> str:
     then a total count. Empty -> ``(no rows)``."""
     if not rows:
         return "(no rows)"
-    headers = list(rows[0].keys())
     shown = rows[:_MAX_SHOWN_ROWS]
+    # Union the keys across the shown rows (first-seen order), not just row 0's: a
+    # heterogeneous raw (clean=False) response can carry a column absent from the first row,
+    # which keying on rows[0] alone would silently drop from the text table.
+    headers = list(dict.fromkeys(key for row in shown for key in row))
     body = [[_cell(row.get(key)) for key in headers] for row in shown]
     columns = list(zip(headers, *body, strict=True))
     widths = [max(_display_width(cell) for cell in column) for column in columns]
