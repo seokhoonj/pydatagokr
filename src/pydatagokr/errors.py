@@ -81,31 +81,6 @@ class DataGoKrPagingError(DataGoKrError):
     """
 
 
-class DataGoKrRateLimitError(DataGoKrError):
-    """The portal rejected the call volume (HTTP 429, or reason code 22/23).
-
-    Its own class -- not a :class:`DataGoKrNetworkError` -- so a bulk caller can catch it
-    distinctly and back off rather than retry immediately. It carries the vendor code on
-    ``.code`` (and the message on ``.message``), so a caller can tell 22 (daily traffic
-    limit, resets at midnight KST) from 23 (per-second throttle); an HTTP-429 rejection
-    that carries no envelope code uses ``"429"``.
-
-    ``retry_after`` is the server's ``Retry-After`` delay in seconds when an HTTP 429 carried
-    that header (its delta-seconds form), else ``None``; the caller decides whether to honor
-    it. An envelope 22/23 rejection carries no such header, so ``retry_after`` is ``None``.
-    """
-
-    code: str
-    message: str
-    retry_after: int | None
-
-    def __init__(self, code: str, message: str, retry_after: int | None = None) -> None:
-        self.code = code
-        self.message = message
-        self.retry_after = retry_after
-        super().__init__(f"[{code}] {message}")
-
-
 class DataGoKrResponseError(DataGoKrError):
     """data.go.kr rejected the call with an error code.
 
@@ -134,6 +109,28 @@ class DataGoKrAuthError(DataGoKrResponseError):
     :class:`DataGoKrResponseError`, so ``except DataGoKrResponseError`` still catches it
     while a caller can catch an auth failure distinctly.
     """
+
+
+class DataGoKrRateLimitError(DataGoKrResponseError):
+    """The portal rejected the call volume (HTTP 429, or reason code 22/23).
+
+    A :class:`DataGoKrResponseError` -- so ``except DataGoKrResponseError`` catches every
+    coded rejection the portal reports, auth and rate-limit alike -- carrying the extra
+    ``retry_after`` so a bulk caller can still catch it distinctly and back off rather than
+    retry immediately. The vendor code is on ``.code`` (and the message on ``.message``), so a
+    caller can tell 22 (daily traffic limit, resets at midnight KST) from 23 (per-second
+    throttle); an HTTP-429 rejection that carries no envelope code uses ``"429"``.
+
+    ``retry_after`` is the server's ``Retry-After`` delay in seconds when an HTTP 429 carried
+    that header (its delta-seconds form), else ``None``; the caller decides whether to honor
+    it. An envelope 22/23 rejection carries no such header, so ``retry_after`` is ``None``.
+    """
+
+    retry_after: int | None
+
+    def __init__(self, code: str, message: str, retry_after: int | None = None) -> None:
+        self.retry_after = retry_after
+        super().__init__(code, message)
 
 
 def _error_for(code: str, message: str) -> DataGoKrError:

@@ -289,6 +289,9 @@ def test_rate_limit_error_carries_retry_after_seconds():
     with pytest.raises(DataGoKrRateLimitError) as exc:
         session.fetch("getThing")
     assert exc.value.retry_after == 12
+    # A rate limit is a coded envelope rejection, so `except DataGoKrResponseError` -- the
+    # catch-all the auth docstring advertises -- must catch it too, not just DataGoKrError.
+    assert isinstance(exc.value, DataGoKrResponseError)
     assert _retry_after_seconds(None) is None and _retry_after_seconds("in a while") is None
 
 

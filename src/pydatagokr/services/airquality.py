@@ -18,7 +18,7 @@ from .._spec import CleanRow, Field, Table
 from ..session import DataGoKrSession
 from ..types import Row
 
-__all__ = ["AGENCY", "AirQuality", "BASE_URL", "DataTerm", "SERVICE", "TABLES"]
+__all__ = ["AGENCY", "AirQuality", "AirVersion", "BASE_URL", "DataTerm", "SERVICE", "TABLES"]
 
 SERVICE = "airquality"
 AGENCY = "한국환경공단 (Korea Environment Corporation, AirKorea)"
@@ -26,6 +26,11 @@ BASE_URL = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc"
 
 # The measurement window ``by_station`` accepts as ``dataTerm`` -- a closed three-value set.
 DataTerm = Literal["DAILY", "MONTH", "3MONTH"]
+
+# The response version ``ver`` selects -- a closed set: 1.0 adds PM2.5 (the default here),
+# up to 1.3 which adds the 1-hour grades. Typed like ``DataTerm`` so a wrong version is a
+# call-site type error rather than a vendor fault, symmetric with its sibling parameter.
+AirVersion = Literal["1.0", "1.1", "1.2", "1.3"]
 
 # The measurement columns, shared by both operations.
 _MEASURE = (
@@ -75,15 +80,15 @@ class AirQuality:
         return f"AirQuality({self._session!r})"
 
     @overload
-    def by_sido(self, *, sido: str, ver: str = ...,
+    def by_sido(self, *, sido: str, ver: AirVersion = ...,
                 clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def by_sido(self, *, sido: str, ver: str = ...,
+    def by_sido(self, *, sido: str, ver: AirVersion = ...,
                 clean: Literal[False]) -> list[Row]: ...
     @overload
-    def by_sido(self, *, sido: str, ver: str = ...,
+    def by_sido(self, *, sido: str, ver: AirVersion = ...,
                 clean: bool) -> list[Row] | list[CleanRow]: ...
-    def by_sido(self, *, sido: str, ver: str = "1.0",
+    def by_sido(self, *, sido: str, ver: AirVersion = "1.0",
                 clean: bool = True) -> list[Row] | list[CleanRow]:
         """시도별 실시간 측정정보 (``getCtprvnRltmMesureDnsty``) -- every station in ``sido``
         (서울/부산/경기/...) at the latest time. ``clean=True`` (the default) returns typed
@@ -92,15 +97,15 @@ class AirQuality:
         return _spec.clean(rows, BY_SIDO) if clean else rows
 
     @overload
-    def by_station(self, *, station: str, data_term: DataTerm = ..., ver: str = ...,
+    def by_station(self, *, station: str, data_term: DataTerm = ..., ver: AirVersion = ...,
                    clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def by_station(self, *, station: str, data_term: DataTerm = ..., ver: str = ...,
+    def by_station(self, *, station: str, data_term: DataTerm = ..., ver: AirVersion = ...,
                    clean: Literal[False]) -> list[Row]: ...
     @overload
-    def by_station(self, *, station: str, data_term: DataTerm = ..., ver: str = ...,
+    def by_station(self, *, station: str, data_term: DataTerm = ..., ver: AirVersion = ...,
                    clean: bool) -> list[Row] | list[CleanRow]: ...
-    def by_station(self, *, station: str, data_term: DataTerm = "DAILY", ver: str = "1.0",
+    def by_station(self, *, station: str, data_term: DataTerm = "DAILY", ver: AirVersion = "1.0",
                    clean: bool = True) -> list[Row] | list[CleanRow]:
         """측정소별 실시간 측정정보 (``getMsrstnAcctoRltmMesureDnsty``) for one ``station``
         over ``data_term`` (``DAILY`` / ``MONTH`` / ``3MONTH``). ``clean`` as

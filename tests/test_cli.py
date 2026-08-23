@@ -94,7 +94,7 @@ def test_fields_json(capsys):
     assert main(["fields", "kofia", "market_funds", "--json"]) == 0
     schema = json.loads(capsys.readouterr().out)
     assert schema[0] == {"token": "basDt", "column": "base_date",
-                         "kind": "date_ymd", "is_key": True}
+                         "kind": "date_ymd", "is_key": True, "required": True}
 
 
 def test_fields_unknown_operation_is_usage_error(capsys):

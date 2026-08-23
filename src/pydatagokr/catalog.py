@@ -8,16 +8,17 @@ the client actually calls, and there is no bundled data file. (A new service is 
 only when it also has a :class:`~pydatagokr.client.DataGoKr` accessor and a CLI subcommand;
 ``tests/test_fleet.py`` fails if the catalog, the client accessors, and the CLI subcommands
 drift apart.) :func:`services` names the
-wrapped services, :func:`operations` lists what each one's surface accepts (exactly the
-names ``KOFIA.fetch`` and the CLI take), and :func:`fields` gives one operation's clean
-column schema.
+wrapped services, :func:`operations` lists the operation names each one's surface accepts
+(through its ``fetch`` where it has one, else its typed methods -- ``airquality`` exposes
+only ``by_sido``/``by_station``), and :func:`fields` gives one operation's clean column
+schema.
 """
 
 from __future__ import annotations
 
 from typing import Protocol, TypedDict
 
-from ._spec import FieldKind, Table
+from ._spec import FieldKind, Table, field_is_required
 from .services import (
     airquality,
     customs,
@@ -41,12 +42,17 @@ class ServiceInfo(TypedDict):
 
 
 class FieldSpec(TypedDict):
-    """One clean column's schema: the vendor token, the clean column, its kind, is-key."""
+    """One clean column's schema: the vendor token, the clean column, its kind, whether it is
+    part of the natural key, and whether :func:`pydatagokr.clean` requires it (drops the row
+    when it is missing). ``is_key`` marks the *natural* key; ``required`` is what actually
+    governs nullability -- for a wide-key table a key column is **not** required, so a schema
+    consumer must key on ``required``, not ``is_key``, to know a column can be ``None``."""
 
-    token:  str
-    column: str
-    kind:   FieldKind
-    is_key: bool
+    token:    str
+    column:   str
+    kind:     FieldKind
+    is_key:   bool
+    required: bool
 
 
 class _ServiceModule(Protocol):
@@ -100,8 +106,9 @@ def fields(service: str, operation: str) -> list[FieldSpec]:
     except KeyError:
         raise ValueError(f"unknown operation {operation!r} for service {service!r}; "
                          f"valid: {list(tables)}") from None
-    return [FieldSpec(token=field.token, column=field.column,
-                      kind=field.kind, is_key=field.is_key) for field in table.fields]
+    return [FieldSpec(token=field.token, column=field.column, kind=field.kind,
+                      is_key=field.is_key, required=field_is_required(field, table))
+            for field in table.fields]
 
 
 def _module(service: str) -> _ServiceModule:

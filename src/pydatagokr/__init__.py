@@ -43,7 +43,7 @@ from .services import (
     RealEstate,
     Weather,
 )
-from .services.airquality import DataTerm
+from .services.airquality import AirVersion, DataTerm
 from .services.procurement import QueryBasis
 from .session import DataGoKrSession
 from .types import JSONParam, ResponseFormat, Row
@@ -55,6 +55,7 @@ except PackageNotFoundError:              # running from source without an insta
 
 __all__ = [
     "AirQuality",
+    "AirVersion",
     "CleanRow",
     "CleanValue",
     "Customs",

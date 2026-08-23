@@ -27,7 +27,7 @@ from typing import Literal
 
 from .types import Row
 
-__all__ = ["CleanRow", "CleanValue", "Field", "FieldKind", "Table", "clean"]
+__all__ = ["CleanRow", "CleanValue", "Field", "FieldKind", "Table", "clean", "field_is_required"]
 
 FieldKind = Literal["date_ymd", "date_ym", "text", "int", "ratio", "decimal"]
 CleanValue = str | int | float | None
@@ -77,10 +77,22 @@ class Table:
 
     @property
     def date_column(self) -> str | None:
-        """The clean column of this table's date field, or ``None`` for a wide-key table
-        that carries no date field (its rows are keyed by a surrogate id, not a period)."""
+        """The clean column of this table's *first* date field, or ``None`` for a wide-key
+        table that carries no date field (its rows are keyed by a surrogate id, not a period).
+        A table may have several date fields (weather carries both ``base_date`` and
+        ``forecast_date``), all of which :func:`clean` treats as required; this returns the
+        first for the common single-date case."""
         return next((field.column for field in self.fields
                      if field.kind.startswith("date")), None)
+
+
+def field_is_required(field: Field, table: Table) -> bool:
+    """Whether :func:`clean` drops a row when this field parses to ``None``. A date field is
+    always required (a row with no date is dropped); a non-date key dimension is required only
+    for a composite-key table -- a wide-key table keeps the row with that dimension ``None``,
+    since its surrogate id, not the key, identifies it. The single source of this rule so the
+    cleaner and the catalog schema (:func:`pydatagokr.catalog.fields`) cannot disagree."""
+    return field.kind.startswith("date") or (field.is_key and not table.is_wide_key)
 
 
 def clean(rows: Iterable[Row], table: Table) -> list[CleanRow]:
@@ -92,8 +104,7 @@ def clean(rows: Iterable[Row], table: Table) -> list[CleanRow]:
     ``pandas.DataFrame`` / ``polars.DataFrame`` accept directly."""
     # Resolve each field's parser and required-ness once, not per row.
     plan = [
-        (field.token, field.column, _PARSER_BY_KIND[field.kind],
-         field.kind.startswith("date") or (field.is_key and not table.is_wide_key))
+        (field.token, field.column, _PARSER_BY_KIND[field.kind], field_is_required(field, table))
         for field in table.fields
     ]
     cleaned: list[CleanRow] = []
