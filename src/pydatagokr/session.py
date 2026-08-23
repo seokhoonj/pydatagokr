@@ -193,8 +193,9 @@ class DataGoKrSession:
 
         Raises ``ValueError`` for a non-positive ``num_of_rows`` or a filter whose name
         collides with a transport-managed query parameter; ``DataGoKrPagingError`` when the
-        vendor's paging breaks (an empty or re-served page before the declared count, or no
-        last-page signal within the page cap); other :class:`DataGoKrError` subclasses on a
+        vendor's paging breaks (an empty page before the declared count, a re-served or
+        over-count page at or past it, or no last-page signal within the page cap); other
+        :class:`DataGoKrError` subclasses on a
         transport failure or a vendor error/auth/rate-limit envelope.
         """
         if isinstance(num_of_rows, bool) or not isinstance(num_of_rows, int) or num_of_rows <= 0:
@@ -207,14 +208,14 @@ class DataGoKrSession:
         managed = {"serviceKey", "numOfRows", "pageNo"}
         if self._response_format == "json":
             managed.add(self._json_param)
-        reserved = managed & filters.keys()
-        if reserved:
+        colliding_names = managed & filters.keys()
+        if colliding_names:
             raise ValueError(
-                f"filter {sorted(reserved)} collides with a transport-managed query parameter "
-                f"(the session sets {', '.join(sorted(managed))})")
+                f"filter {sorted(colliding_names)} collides with a transport-managed query "
+                f"parameter (the session sets {', '.join(sorted(managed))})")
         rows: list[Row] = []
         total: int | None = None
-        previous_page: list[Row] | None = None
+        previous_page_rows: list[Row] | None = None
         for page in range(1, _PAGE_CAP + 1):
             page_rows, page_total = self._fetch_page(operation, page, num_of_rows, filters)
             rows.extend(page_rows)
@@ -239,7 +240,7 @@ class DataGoKrSession:
                             f"data.go.kr returned more rows than its declared totalCount "
                             f"({len(rows)} > {total}) for {operation}; refusing a possibly "
                             f"duplicated result")
-                    if page_rows and page_rows == previous_page:
+                    if page_rows and page_rows == previous_page_rows:
                         # Exact landing (len == total): the > total guard above cannot see a
                         # re-served page here. A final page identical to the one before is that
                         # re-serve (a vendor ignoring pageNo, with totalCount an exact multiple
@@ -258,7 +259,7 @@ class DataGoKrSession:
                         f"possibly truncated result")
             elif not page_rows or len(page_rows) < num_of_rows:
                 return rows                        # no count: a short/empty page is the end
-            previous_page = page_rows
+            previous_page_rows = page_rows
         # The cap was reached without any last-page signal: rather than silently return a
         # truncated result that looks complete, refuse it. The message carries the
         # operation path only (never the key-bearing query string).

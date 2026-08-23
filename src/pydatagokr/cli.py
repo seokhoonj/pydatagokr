@@ -321,11 +321,11 @@ def _run_airquality_by_sido(args: argparse.Namespace) -> int:
 def _run_airquality_by_station(args: argparse.Namespace) -> int:
     # --data-term is SUPPRESSed when unset, so forward it only when the user gave one and
     # let by_station choose the default otherwise (no restated default at the call site).
-    air = AirQuality()
+    airquality = AirQuality()
     if hasattr(args, "data_term"):
-        rows = air.by_station(station=args.station, data_term=args.data_term)
+        rows = airquality.by_station(station=args.station, data_term=args.data_term)
     else:
-        rows = air.by_station(station=args.station)
+        rows = airquality.by_station(station=args.station)
     _emit(rows, args.json)
     return 0
 
@@ -340,12 +340,12 @@ def _run_midforecast(args: argparse.Namespace) -> int:
 def _run_procurement(args: argparse.Namespace) -> int:
     # --query-basis is SUPPRESSed when unset, so forward it only when the user gave one and
     # let fetch choose the default otherwise (no restated default at the call site).
-    pr = Procurement()
+    procurement = Procurement()
     if hasattr(args, "query_basis"):
-        rows = pr.fetch(args.operation, begin=args.begin, end=args.end,
-                        query_basis=args.query_basis)
+        rows = procurement.fetch(args.operation, begin=args.begin, end=args.end,
+                                 query_basis=args.query_basis)
     else:
-        rows = pr.fetch(args.operation, begin=args.begin, end=args.end)
+        rows = procurement.fetch(args.operation, begin=args.begin, end=args.end)
     _emit(rows, args.json)
     return 0
 
@@ -358,8 +358,8 @@ def _emit(rows: Sequence[Mapping[str, object]], as_json: bool) -> None:
 
 
 def _render_rows(rows: Sequence[Mapping[str, object]]) -> str:
-    """Rows as an aligned table over the first row's keys (up to ``_MAX_SHOWN_ROWS``),
-    then a total count. Empty -> ``(no rows)``."""
+    """Rows as an aligned table over the union of the shown rows' keys (first-seen order,
+    up to ``_MAX_SHOWN_ROWS``), then a total count. Empty -> ``(no rows)``."""
     if not rows:
         return "(no rows)"
     shown = rows[:_MAX_SHOWN_ROWS]

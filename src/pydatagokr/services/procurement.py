@@ -71,9 +71,9 @@ class Procurement:
     """The 나라장터 입찰공고 surface. Construct with a data.go.kr decoding key (or let it
     resolve ``DATAGOKR_API_KEY`` / the config file)::
 
-        pr = Procurement()
-        rows = pr.services(begin="202608010000", end="202608102359")   # 용역 입찰공고
-        rows = pr.construction(begin="202608010000", end="202608102359")
+        procurement = Procurement()
+        rows = procurement.services(begin="202608010000", end="202608102359")   # 용역 입찰공고
+        rows = procurement.construction(begin="202608010000", end="202608102359")
     """
 
     def __init__(self, api_key: str | None = None, *, timeout: float = 30.0) -> None:
