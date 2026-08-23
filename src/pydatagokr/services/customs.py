@@ -48,7 +48,7 @@ class Customs:
     let it resolve ``DATAGOKR_API_KEY`` / the config file)::
 
         customs = Customs()
-        rows = customs.item_trade("8542311000", begin="202601", end="202606")
+        rows = customs.item_trade("8542311000", start="202601", end="202606")
     """
 
     def __init__(self, api_key: str | None = None, *, timeout: float = 30.0) -> None:
@@ -59,42 +59,42 @@ class Customs:
         return f"Customs({self._session!r})"
 
     @overload
-    def item_trade(self, hs_code: str, *, begin: str, end: str,
+    def item_trade(self, hs_code: str, *, start: str, end: str,
                    clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def item_trade(self, hs_code: str, *, begin: str, end: str,
+    def item_trade(self, hs_code: str, *, start: str, end: str,
                    clean: Literal[False]) -> list[Row]: ...
     @overload
-    def item_trade(self, hs_code: str, *, begin: str, end: str,
+    def item_trade(self, hs_code: str, *, start: str, end: str,
                    clean: bool) -> list[Row] | list[CleanRow]: ...
-    def item_trade(self, hs_code: str, *, begin: str, end: str,
+    def item_trade(self, hs_code: str, *, start: str, end: str,
                    clean: bool = True) -> list[Row] | list[CleanRow]:
         """품목별 수출입실적 (``getItemtradeList``) for one HS code, monthly over
-        ``begin``/``end`` = YYYYMM. ``clean=True`` (the default) returns typed snake_case
+        ``start``/``end`` = YYYYMM. ``clean=True`` (the default) returns typed snake_case
         rows through :data:`ITEM_TRADE`; ``clean=False`` the raw vendor rows."""
         rows = self._session.fetch(ITEM_TRADE.operation,
-                                   strtYymm=begin, endYymm=end, hsSgn=hs_code)
+                                   strtYymm=start, endYymm=end, hsSgn=hs_code)
         return _spec.clean(rows, ITEM_TRADE) if clean else rows
 
     @overload
-    def fetch(self, name: str, hs_code: str, *, begin: str, end: str,
+    def fetch(self, name: str, hs_code: str, *, start: str, end: str,
               clean: Literal[True] = ...) -> list[CleanRow]: ...
     @overload
-    def fetch(self, name: str, hs_code: str, *, begin: str, end: str,
+    def fetch(self, name: str, hs_code: str, *, start: str, end: str,
               clean: Literal[False]) -> list[Row]: ...
     @overload
-    def fetch(self, name: str, hs_code: str, *, begin: str, end: str,
+    def fetch(self, name: str, hs_code: str, *, start: str, end: str,
               clean: bool) -> list[Row] | list[CleanRow]: ...
-    def fetch(self, name: str, hs_code: str, *, begin: str, end: str,
+    def fetch(self, name: str, hs_code: str, *, start: str, end: str,
               clean: bool = True) -> list[Row] | list[CleanRow]:
         """The operation by name (``"item_trade"``; see :meth:`operations`) for one HS code
-        over ``begin``/``end`` = YYYYMM -- the fleet's generic entry point, mirroring the typed
+        over ``start``/``end`` = YYYYMM -- the fleet's generic entry point, mirroring the typed
         :meth:`item_trade`. Raises ``ValueError`` for an unknown ``name``;
         :class:`~pydatagokr.errors.DataGoKrError` (and subclasses) on a transport or vendor
         failure. ``clean=True`` (the default) returns typed rows; ``clean=False`` raw."""
         if name != ITEM_TRADE.name:
             raise ValueError(f"unknown operation {name!r}; valid: {list(TABLES)}")
-        return self.item_trade(hs_code, begin=begin, end=end, clean=clean)
+        return self.item_trade(hs_code, start=start, end=end, clean=clean)
 
     @staticmethod
     def operations() -> tuple[str, ...]:

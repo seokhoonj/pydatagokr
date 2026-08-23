@@ -215,7 +215,7 @@ def test_customs_item_trade_sends_range_and_cleans(capsys, keyed_env, monkeypatc
           "expDlr": "123", "expWgt": "4", "impDlr": "5", "impWgt": "6",
           "balPayments": "118"}], total=1))
     assert main(["customs", "item_trade", "8542",
-                 "--begin", "202601", "--end", "202603"]) == 0
+                 "--start", "202601", "--end", "202603"]) == 0
     out = capsys.readouterr().out
     assert "item_name" in out and "export_usd" in out        # cleaned columns
     assert "2026-01" in out                                  # dotted period parsed

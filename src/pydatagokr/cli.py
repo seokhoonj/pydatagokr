@@ -11,7 +11,7 @@ clean column schema offline. The fetch commands -- one per wrapped service: ``we
     $ datagokr airquality by_sido 서울
     $ datagokr midforecast land --regid 11B00000 --time-forecast 202608111800
     $ datagokr procurement services --begin 202608010000 --end 202608102359
-    $ datagokr customs item_trade 8542 --begin 202401 --end 202406
+    $ datagokr customs item_trade 8542 --start 202401 --end 202406
 """
 
 from __future__ import annotations
@@ -132,7 +132,7 @@ def _make_parser() -> argparse.ArgumentParser:
     item_trade_cmd = customs_ops.add_parser(
         "item_trade", help="fetch one HS code's monthly 수출입실적")
     item_trade_cmd.add_argument("hs_code", metavar="HS", help="HS code (hsSgn)")
-    item_trade_cmd.add_argument("--begin", required=True, metavar="YYYYMM",
+    item_trade_cmd.add_argument("--start", required=True, metavar="YYYYMM",
                                 help="range start")
     item_trade_cmd.add_argument("--end", required=True, metavar="YYYYMM",
                                 help="range end")
@@ -282,7 +282,7 @@ def _run_kofia(args: argparse.Namespace) -> int:
 
 
 def _run_customs_item_trade(args: argparse.Namespace) -> int:
-    rows = Customs().item_trade(args.hs_code, begin=args.begin, end=args.end)
+    rows = Customs().item_trade(args.hs_code, start=args.start, end=args.end)
     _emit(rows, args.json)
     return 0
 

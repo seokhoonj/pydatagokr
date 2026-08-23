@@ -58,7 +58,7 @@ def _customs(raw):
 
 def test_item_trade_cleans_by_default():
     customs, opener = _customs(_xml([_ROW], 1))
-    rows = customs.item_trade("8542311000", begin="202601", end="202601")
+    rows = customs.item_trade("8542311000", start="202601", end="202601")
     assert rows == [{
         "period":            "2026-01",
         "hs_code":           "8542311000",
@@ -77,13 +77,13 @@ def test_item_trade_cleans_by_default():
 
 def test_item_trade_raw_returns_vendor_tokens():
     customs, _ = _customs(_xml([_ROW], 1))
-    rows = customs.item_trade("8542311000", begin="202601", end="202601", clean=False)
+    rows = customs.item_trade("8542311000", start="202601", end="202601", clean=False)
     assert rows == [_ROW]
 
 
 def test_negative_trade_balance_parses():
     customs, _ = _customs(_xml([{**_ROW, "balPayments": "-1234"}], 1))
-    cleaned = customs.item_trade("8542311000", begin="202601", end="202601")
+    cleaned = customs.item_trade("8542311000", start="202601", end="202601")
     assert cleaned[0]["trade_balance_usd"] == -1234
 
 

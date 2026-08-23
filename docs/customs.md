@@ -12,10 +12,10 @@
 ## CLI
 
 ```bash
-datagokr customs item_trade 8542 --begin 202401 --end 202406
+datagokr customs item_trade 8542 --start 202401 --end 202406
 ```
 
-첫 인자는 HS 부호(`8542` = 반도체 집적회로), `--begin`/`--end`는 조회 구간(YYYYMM).
+첫 인자는 HS 부호(`8542` = 반도체 집적회로), `--start`/`--end`는 조회 구간(YYYYMM).
 
 ## Python
 
@@ -23,7 +23,7 @@ datagokr customs item_trade 8542 --begin 202401 --end 202406
 from pydatagokr import DataGoKr
 
 client = DataGoKr()
-rows = client.customs.item_trade("8542", begin="202401", end="202406")
+rows = client.customs.item_trade("8542", start="202401", end="202406")
 ```
 
 무역수지는 수출액 - 수입액이며 음수일 수 있습니다. HS 부호는 관세청 HS 품목분류표에서
