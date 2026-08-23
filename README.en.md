@@ -22,22 +22,32 @@ is a list of dicts (`list[dict]`), so `pandas.DataFrame(...)` turns it into a ta
 pip install pydatagokr
 ```
 
-A data.go.kr API key is required. Copy the **Decoding** key issued at
-[data.go.kr](https://www.data.go.kr) (not the Encoding key). There are three ways to provide it.
+A data.go.kr API key is required. Use the **Decoding** key issued at
+[data.go.kr](https://www.data.go.kr) -- not the Encoding key. Provide it in one of these ways.
 
-**① In code**: `DataGoKr(api_key="your-decoding-key")` (see the quick start below).
+**Option 1 — pass it directly** (for a quick one-off use)
 
-**② In a file** (recommended, so plain `DataGoKr()` works afterward). Save the following to `~/.config/pydatagokr/credentials.json`:
+```python
+from pydatagokr import DataGoKr
+
+client = DataGoKr(api_key="your-decoding-key")
+```
+
+**Option 2 — save it in a file** (recommended, so you only enter it once)
+
+Create `~/.config/pydatagokr/credentials.json` with:
 
 ```json
 { "DATAGOKR_API_KEY": "your-decoding-key" }
 ```
 
-**③ Environment variable**: on macOS/Linux `export DATAGOKR_API_KEY=your-decoding-key`; on
-Windows PowerShell `setx DATAGOKR_API_KEY "your-decoding-key"`.
+After that, `DataGoKr()` finds the saved key automatically.
 
-① is Python-only -- the `datagokr` **CLI has no key argument**, so configure it through ② (the
-file) or ③ (the environment variable). The file path follows `$XDG_CONFIG_HOME` when set
+> If you prefer an environment variable, use `export DATAGOKR_API_KEY="your-decoding-key"` on
+> macOS and Linux, or `setx DATAGOKR_API_KEY "your-decoding-key"` in Windows PowerShell.
+
+The `datagokr` **CLI has no key argument**, so configure it through Option 2 (the file) or the
+environment variable. The file path follows `$XDG_CONFIG_HOME` when set
 (`$XDG_CONFIG_HOME/pydatagokr/credentials.json`), else `~/.config/pydatagokr/credentials.json`.
 
 Each dataset must be applied for separately (활용신청) on your data.go.kr account before it can
@@ -46,7 +56,7 @@ be called. Click "활용신청" on the dataset's page, then check the approval s
 
 ## 2. Quickstart
 
-### 2.1 Pre-built services (current)
+### 2.1 Listed services (current)
 
 Call them directly through an accessor:
 

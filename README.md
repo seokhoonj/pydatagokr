@@ -21,24 +21,33 @@
 pip install pydatagokr
 ```
 
-data.go.kr 인증키가 필요합니다. [data.go.kr](https://www.data.go.kr)에서 발급받은
-**Decoding(디코딩)** 키를 복사하세요(Encoding 키가 아닙니다). 키를 넣는 방법은 세 가지입니다.
+이 패키지는 data.go.kr 인증키가 필요합니다. [data.go.kr](https://www.data.go.kr)에서 발급받은
+**Decoding(디코딩)** 키를 쓰세요 -- Encoding 키가 아닙니다. 키를 넣는 방법은 다음과 같습니다.
 
-**① 코드에서 직접**: `DataGoKr(api_key="발급받은-디코딩-키")` (아래 빠른 시작).
+**방법 1 — 코드에서 직접 넣기** (바로 한 번 써볼 때)
 
-**② 파일에 저장**(권장, 한 번 넣으면 이후 `DataGoKr()`만 써도 됨). 아래를 `~/.config/pydatagokr/credentials.json`에 저장합니다:
+```python
+from pydatagokr import DataGoKr
+
+client = DataGoKr(api_key="발급받은-디코딩-키")
+```
+
+**방법 2 — 파일에 저장해서 계속 쓰기** (권장 — 한 번 저장하면 매번 안 넣어도 됩니다)
+
+`~/.config/pydatagokr/credentials.json` 파일을 만들고 아래를 넣으세요.
 
 ```json
 { "DATAGOKR_API_KEY": "발급받은-디코딩-키" }
 ```
 
-**③ 환경변수**: macOS·Linux는 `export DATAGOKR_API_KEY=발급받은-디코딩-키`, Windows
-PowerShell은 `setx DATAGOKR_API_KEY "발급받은-디코딩-키"`.
+그러면 이후로는 인자 없이 `DataGoKr()`만 써도 이 키를 자동으로 찾습니다.
 
-①은 Python 전용입니다 -- `datagokr` **CLI에는 키 인자가 없으니** ②(파일) 또는 ③(환경변수)로
-넣으세요. 파일 경로는 `$XDG_CONFIG_HOME`이 설정돼 있으면 그 아래
-(`$XDG_CONFIG_HOME/pydatagokr/credentials.json`), 아니면 `~/.config/pydatagokr/credentials.json`
-입니다.
+> 환경변수를 선호하면, macOS·Linux는 터미널에서 `export DATAGOKR_API_KEY="발급받은-디코딩-키"`,
+> Windows는 PowerShell에서 `setx DATAGOKR_API_KEY "발급받은-디코딩-키"`.
+
+`datagokr` **CLI에는 키 인자가 없으니** 방법 2(파일)나 환경변수로 키를 넣으세요. 파일 경로는
+`$XDG_CONFIG_HOME`이 설정돼 있으면 그 아래(`$XDG_CONFIG_HOME/pydatagokr/credentials.json`),
+아니면 `~/.config/pydatagokr/credentials.json`입니다.
 
 데이터마다 data.go.kr에서 따로 **활용신청**(사용 신청)을 해야 불러올 수 있습니다. 그
 데이터의 안내 페이지에서 "활용신청"을 누르고, 마이페이지 > 데이터 활용 > Open API에서
@@ -46,7 +55,7 @@ PowerShell은 `setx DATAGOKR_API_KEY "발급받은-디코딩-키"`.
 
 ## 2. 빠른 시작
 
-### 2.1 지원 서비스 (현재 기준)
+### 2.1 목록에 있는 서비스 (현재 기준)
 
 접근자로 바로 부릅니다:
 
