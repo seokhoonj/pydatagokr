@@ -1,5 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+# Floor 1.27: first hatchling with PEP 639 (the SPDX `license = "MIT"` expression and
+# `license-files`) -> Metadata-Version 2.4. Ceiling <1.32: 1.32 bumped to Metadata-Version
+# 2.5, which the twine bundled in the pinned publish action does not yet recognize
+# (pypa/twine#1327), failing the upload's metadata check. 2.4 is accepted by PyPI and that
+# twine; lift the ceiling once the action ships a 2.5-aware twine.
+requires = ["hatchling>=1.27,<1.32"]
 build-backend = "hatchling.build"
 
 [project]
