@@ -653,6 +653,34 @@ def test_over_collected_paging_refuses_to_return_duplicates():
         session.fetch("getThing", num_of_rows=2)
 
 
+def test_mid_stream_no_data_page_reports_truncation_not_over_count():
+    # A service reports totalCount, then answers a later page with resultCode 03 (no data)
+    # before the count is reached. Refusing is right, but a no-data page carries no
+    # authoritative count, so the latched totalCount must stand and the message must blame
+    # truncation -- not misattribute it to over-collection ("more rows than ... (2 > 0)").
+    session, _ = _session(
+        _envelope([{"n": "1"}, {"n": "2"}], total=5),        # page 1: 2 of 5
+        _envelope(None, code="03", message="NODATA_ERROR"),  # page 2: no-data mid-result
+    )
+    with pytest.raises(DataGoKrPagingError) as exc:
+        session.fetch("getThing", num_of_rows=2)
+    assert "before its declared totalCount" in str(exc.value)   # truncation, the real cause
+    assert "more rows than" not in str(exc.value)               # not the over-count message
+
+
+def test_total_count_latches_when_a_later_page_omits_it():
+    # A vendor reports totalCount on page 1 but omits it on page 2 while re-serving the same
+    # full page (ignores pageNo). The latched count still catches the duplication at once,
+    # instead of losing the count and running all the way to the page cap.
+    session, _ = _session(
+        _envelope([{"n": "1"}, {"n": "2"}], total=3),   # page 1: 2 of 3, count present
+        _envelope([{"n": "1"}, {"n": "2"}]),            # page 2: same rows, count omitted
+    )
+    with pytest.raises(DataGoKrPagingError) as exc:
+        session.fetch("getThing", num_of_rows=2)
+    assert "more rows than its declared totalCount" in str(exc.value)
+
+
 def test_over_nested_body_becomes_a_network_error_not_a_recursion_error():
     # A pathological deeply-nested body must surface as our network error, not leak a bare
     # RecursionError from the XML walk.

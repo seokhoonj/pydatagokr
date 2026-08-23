@@ -202,9 +202,16 @@ class DataGoKrSession:
                 f"filter {sorted(reserved)} collides with a transport-managed query parameter "
                 f"(serviceKey/numOfRows/pageNo and the JSON flag are set by the session)")
         rows: list[Row] = []
+        total: int | None = None
         for page in range(1, _PAGE_CAP + 1):
-            page_rows, total = self._fetch_page(operation, page, num_of_rows, filters)
+            page_rows, page_total = self._fetch_page(operation, page, num_of_rows, filters)
             rows.extend(page_rows)
+            # Latch the count the first time the service reports one: the portal normally
+            # repeats totalCount on every page, but a vendor that sends it only on page 1 (or
+            # omits it on a later page) would otherwise lose it, and the duplicate-page guard
+            # below would go dormant until the page cap. Once seen, the count governs the run.
+            if total is None:
+                total = page_total
             # When the service reports a totalCount it is authoritative: a page shorter
             # than num_of_rows can be a mid-result page from a service that caps its own
             # page size, so a short page must not end paging while the count says rows
@@ -291,10 +298,10 @@ class DataGoKrSession:
             failure = DataGoKrNetworkError(
                 f"data.go.kr response read failed for {operation}: {type(err).__name__}")
         else:
-            return self._page_from_body(raw, operation)
+            return self._page_from_bytes(raw, operation)
         raise failure from None
 
-    def _page_from_body(self, raw: bytes, operation: str) -> tuple[list[Row], int | None]:
+    def _page_from_bytes(self, raw: bytes, operation: str) -> tuple[list[Row], int | None]:
         """Apply the portal envelope contract to a raw 200 body (JSON or XML). Both
         encodings decode into the same nested dict, so the envelope logic below runs once
         regardless of the wire format."""
@@ -376,7 +383,11 @@ class DataGoKrSession:
         # kept for the error message.
         digits = code.lstrip("0") or "0"
         if digits == (_NO_DATA_CODE.lstrip("0") or "0"):
-            return [], 0    # "no data" is an empty series, not an error
+            # "No data" is an empty series, not an error. It carries no authoritative count,
+            # so report the count as unknown (None), not 0: a mid-result no-data page must not
+            # overwrite a totalCount an earlier page already declared (that would make the
+            # paging loop misread a truncation as over-collection).
+            return [], None
         if digits != (_OK_CODE.lstrip("0") or "0"):
             message = self._redact(str(header.get("resultMsg", "")).strip())
             raise _error_for(code, message) from None
@@ -400,6 +411,11 @@ class DataGoKrSession:
             if not isinstance(row, dict):
                 raise DataGoKrNetworkError(
                     f"a non-object row from data.go.kr for {operation}") from None
+            # Each value is stringified to honor Row = dict[str, str]. The wrapped services
+            # return flat rows (one level of text fields), which is the whole contract; should
+            # a vendor ever nest an element (making a value a dict from the XML/JSON walk), it
+            # is flattened to its string form here rather than widening the row type -- a
+            # lossy but non-crashing fallback for a shape none of the wrapped services emit.
             rows.append({str(key): "" if value is None else str(value)
                          for key, value in row.items()})
         return rows
