@@ -226,7 +226,7 @@ def test_customs_item_trade_sends_range_and_cleans(capsys, keyed_env, monkeypatc
     assert main(["customs", "item_trade", "8542",
                  "--start", "202601", "--end", "202603"]) == 0
     out = capsys.readouterr().out
-    assert "item_name" in out and "export_usd" in out        # cleaned columns
+    assert "item_name" in out and "export_dollar" in out    # cleaned columns
     assert "2026-01" in out                                  # dotted period parsed
     assert "hsSgn=8542" in urls[0]
     assert "strtYymm=202601" in urls[0] and "endYymm=202603" in urls[0]

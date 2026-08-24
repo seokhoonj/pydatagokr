@@ -26,5 +26,6 @@ client = DataGoKr()
 rows = client.customs.item_trade("8542", start="202401", end="202406")
 ```
 
-무역수지는 수출액 - 수입액이며 음수일 수 있습니다. HS 부호는 관세청 HS 품목분류표에서
-확인하세요.
+금액(`export_dollar`·`import_dollar`·`trade_balance`)은 **USD**, 중량(`export_weight`·
+`import_weight`)은 **kg**입니다. 무역수지(`trade_balance`)는 수출액 - 수입액이며 음수일 수
+있습니다. HS 부호는 관세청 HS 품목분류표에서 확인하세요.

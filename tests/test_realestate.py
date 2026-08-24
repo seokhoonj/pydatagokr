@@ -69,7 +69,7 @@ def test_apt_trade_synthesizes_deal_date_and_types_the_measures():
     row = realestate.apt_trade(lawd_code="11110", deal_ym="202401")[0]
     assert row["deal_date"] == "2024-01-19"       # from dealYear/dealMonth/dealDay
     assert row["exclusive_area"] == pytest.approx(84.9478)       # decimal -> float
-    assert row["deal_amount_manwon"] == 101300    # comma stripped -> int
+    assert row["deal_amount"] == 101300    # comma stripped -> int
     assert row["floor"] == 13
     assert row["apt_name"] == "종로청계힐스테이트"
     assert "dealYear" not in row                  # split parts collapse into deal_date
@@ -140,7 +140,7 @@ _SALE_CLEAN_CORE = {
     "exclusive_area": 84.5,
     "floor":          13,
     "build_year":     2009,
-    "deal_amount_manwon": 101300,
+    "deal_amount": 101300,
     "dealing_type":   "중개거래",
     "buyer_type":     "개인",
     "seller_type":    "법인",
@@ -189,9 +189,9 @@ _CASES = [
          "roadnmsggcd": "11110", "roadnmbcd": "0"},
         {"deal_date": "2024-01-19", "lawd_code": "11110", "dong": "숭인동", "jibun": "766",
          "apt_name": "종로청계힐스테이트", "exclusive_area": 84.5, "floor": 13,
-         "build_year": 2009, "deposit_manwon": 50000, "monthly_rent_manwon": 0,
+         "build_year": 2009, "deposit": 50000, "monthly_rent": 0,
          "contract_type": "신규", "contract_term": "202401~202601",
-         "prev_deposit_manwon": 0, "prev_monthly_rent_manwon": 0,
+         "prev_deposit": 0, "prev_monthly_rent": 0,
          "renewal_right_used": None, "apt_seq": "11110-100", "road_name": "종로",
          "road_code": "400", "road_main_no": "12", "road_sub_no": "0", "road_seq": "01",
          "road_sgg_code": "11110", "road_basement_yn": "0"},

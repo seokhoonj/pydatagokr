@@ -135,14 +135,17 @@ codes it needs.
 - **Readable names and real types (`clean`).** The agency's rows are hard to read by field name
   alone (`sggCd`, `excluUseAr`) and every value is a string. By default `clean=True` **renames
   fields to readable names and parses string values into real types** (`lawd_code`,
-  `exclusive_area=84.97`, `deal_amount_manwon=82000`); an unparsable value becomes `None`. A row
+  `exclusive_area=84.97`, `deal_amount=82000`); an unparsable value becomes `None`. A row
   missing its date is dropped, and a composite-key table also drops a row missing a key dimension,
   but a wide-key table keeps the row with that value as `None`. `clean=False` leaves the agency's
   raw rows as they are.
-- **Amount units are in the column name.** Apartment prices are in **10,000 KRW (만원)**
-  (`deal_amount_manwon`, `deposit_manwon`, `monthly_rent_manwon`); procurement is in **KRW**
-  (`estimated_price_krw`, `budget_amount_krw`); customs `export_usd` etc. are in **USD**. Still
-  match units when summing amounts from several services in one table.
+- **Amount units differ by service.** Apartment prices are in **10,000 KRW (만원)**
+  (`deal_amount`, `deposit`, `monthly_rent`); procurement is in **KRW**
+  (`estimated_price`, `budget_amount`); KOFIA is in **KRW** (`amount`, ...). A surprising,
+  non-default unit is spelled into the column name -- customs trade amounts are in **USD**
+  (`export_dollar`, `import_dollar`) and the KOFIA overseas-derivatives value is in **USD**
+  (`trade_value_usd`). Other units are documented per service (`docs/*.md`), so match units
+  when summing amounts from several services in one table.
 - **Discovery.** `datagokr list` shows the services and operations. In Python, `catalog.services()`
   lists the services, `catalog.operations("weather")` a service's operations, and
   `catalog.fields("weather", "forecast")` (CLI: `datagokr fields`) its tidied column schema.

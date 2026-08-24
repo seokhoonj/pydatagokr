@@ -9,15 +9,15 @@ Fetch 나라장터 bid announcements over a time window. The vendor requires the
 match the announcement's 업무구분, so there is one per kind. Clean columns (a curated header
 subset of the vendor's ~100 fields): `notice_no`, `notice_ord`, `notice_name`,
 `notice_kind`, `notice_agency` (공고기관), `demand_agency` (수요기관), `bid_method`,
-`contract_method`, `notice_at`/`bid_close_at`/`opening_at` (times, text), `estimated_price_krw`
-(추정가격, 원 int), `budget_amount_krw` (배정예산, 원 int), `officer_name`, `notice_url`,
+`contract_method`, `notice_at`/`bid_close_at`/`opening_at` (times, text), `estimated_price`
+(추정가격, 원 int), `budget_amount` (배정예산, 원 int), `officer_name`, `notice_url`,
 `registered_at`.
 
 | operation | 업무구분 |
 |---|---|
 | `goods` | 물품 |
 | `services` | 용역 |
-| `construction` | 공사 (배정예산 미제공 -- `budget_amount_krw` is `None`) |
+| `construction` | 공사 (배정예산 미제공 -- `budget_amount` is `None`) |
 | `foreign` | 외자 |
 
 ## Prerequisite

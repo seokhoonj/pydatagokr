@@ -6,9 +6,9 @@ description: "Fetch Korea Customs Service (관세청) monthly item trade for one
 # datagokr — 관세청 수출입 무역통계
 
 Fetch one HS code's monthly 수출입실적 over a YYYYMM range. Clean columns: `period`
-(YYYY-MM), `hs_code`, `item_name`, `export_usd`, `export_weight_kg`, `import_usd`,
-`import_weight_kg`, `trade_balance_usd` (all amounts/weights are integers). `--json`
-returns the full typed rows.
+(YYYY-MM), `hs_code`, `item_name`, `export_dollar`, `export_weight`, `import_dollar`,
+`import_weight`, `trade_balance` (all integers; `export_dollar`/`import_dollar`/`trade_balance`
+in USD, the weights in kg). `--json` returns the full typed rows.
 
 ## Prerequisite
 

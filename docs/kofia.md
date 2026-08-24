@@ -36,3 +36,7 @@ els   = client.kofia.fetch("els_elb", begin="202401", end="202406")   # 월간 =
 
 `market_funds`와 `credit_balance`는 편의 메서드로, 나머지 오퍼레이션은 `fetch(name, ...)`로
 조회합니다. 전체 목록은 `datagokr list` / `KOFIA.operations()`.
+
+금액 컬럼은 **원**입니다(`amount`·`account_balance`·신용/자금 잔고 등). 유일한 예외는
+해외파생상품(`overseas_derivatives`)의 거래대금으로, 기관 토큰 `trPrcUsd`가 USD를 명시하므로
+컬럼명이 `trade_value_usd`이며 단위는 **USD**입니다.

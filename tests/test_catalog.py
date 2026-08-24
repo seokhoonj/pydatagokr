@@ -25,11 +25,11 @@ def test_customs_fields_are_the_confirmed_tokens():
         ("year",        "period"),
         ("hsCode",      "hs_code"),
         ("statKor",     "item_name"),
-        ("expDlr",      "export_usd"),
-        ("expWgt",      "export_weight_kg"),
-        ("impDlr",      "import_usd"),
-        ("impWgt",      "import_weight_kg"),
-        ("balPayments", "trade_balance_usd"),
+        ("expDlr",      "export_dollar"),
+        ("expWgt",      "export_weight"),
+        ("impDlr",      "import_dollar"),
+        ("impWgt",      "import_weight"),
+        ("balPayments", "trade_balance"),
     ]
 
 

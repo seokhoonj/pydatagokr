@@ -8,6 +8,11 @@ vendor's field tokens (``invrDpsgAmt``, ``crdTrFingWhl``, ...) to clean snake_ca
 columns; ``clean=True`` (the default) returns those typed rows, ``clean=False`` the raw
 vendor rows.
 
+Monetary columns are in 원 (KRW) -- the service's default currency, so the clean names
+stay bare (``amount``, ``account_balance``, the credit/flow balances, ...). The sole
+exception is 해외파생상품 거래대금, whose vendor token ``trPrcUsd`` spells USD; that column
+keeps the unit as ``trade_value_usd``.
+
 Dates are the service's own format: 일별 오퍼레이션은 ``begin``/``end`` = YYYYMMDD, 월별
 오퍼레이션(신탁규모·DLS/DLB 등)은 YYYYMM (a YYYYMMDD bound is truncated to its YYYYMM
 prefix). Data updates once a day and starts 2021-11-16.
@@ -79,7 +84,7 @@ DLS_DLB = Table("dls_dlb", "getDLSAndDLBInfo", (
     Field("ctgDlbDls",    "product_type",  "text", is_key=True),      # 원금보장/비보장/합계
     Field("ctgPrplcPsub", "offering_type", "text", is_key=True),      # 공모/사모/합계
     Field("presCtg",      "status_type",   "text", is_key=True),      # 발행실적/미상환잔고/상환현황
-    Field("amt",          "amount_krw",    "int"),                    # 금액 (원)
+    Field("amt",          "amount",        "int"),                    # 금액 (원)
     Field("ccnt",         "deal_count",    "int"),                    # 건수
 ))
 
@@ -88,7 +93,7 @@ ELS_ELB = Table("els_elb", "getELSAndELBInfo", (
     Field("ctgElbEls",    "product_type",  "text", is_key=True),      # ELB/ELS 구분
     Field("ctgPrplcPsub", "offering_type", "text", is_key=True),      # 공모/사모
     Field("presCtg",      "status_type",   "text", is_key=True),      # 발행실적/미상환잔고/상환현황
-    Field("amt",          "amount_krw",    "int"),                    # 금액 (원)
+    Field("amt",          "amount",        "int"),                    # 금액 (원)
     Field("ccnt",         "deal_count",    "int"),                    # 건수
 ))
 

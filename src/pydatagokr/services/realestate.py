@@ -39,7 +39,7 @@ _SALE_CORE = (
     Field("excluUseAr",      "exclusive_area",  "decimal", is_key=True),    # 전용면적(m^2)
     Field("floor",           "floor",           "int", is_key=True),        # 층
     Field("buildYear",       "build_year",      "int"),                     # 건축년도
-    Field("dealAmount",      "deal_amount_manwon", "int"),                  # 거래금액(만원)
+    Field("dealAmount",      "deal_amount",     "int"),                     # 거래금액(만원)
     Field("dealingGbn",      "dealing_type",    "text"),                    # 거래유형(중개/직거래)
     Field("buyerGbn",        "buyer_type",      "text"),                    # 매수자 구분
     Field("slerGbn",         "seller_type",     "text"),                    # 매도자 구분
@@ -83,29 +83,29 @@ APT_PRESALE = Table("apt_presale", "RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade
 
 APT_RENT = Table("apt_rent", "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
                  (
-    Field("dealDate",        "deal_date",       "date_ymd", is_key=True),
-    Field("sggCd",           "lawd_code",       "text", is_key=True),
-    Field("umdNm",           "dong",            "text", is_key=True),
-    Field("jibun",           "jibun",           "text", is_key=True),
-    Field("aptNm",           "apt_name",        "text", is_key=True),
-    Field("excluUseAr",      "exclusive_area",  "decimal", is_key=True),
-    Field("floor",           "floor",           "int", is_key=True),
-    Field("buildYear",       "build_year",      "int"),
-    Field("deposit",         "deposit_manwon",  "int"),                     # 보증금(만원)
-    Field("monthlyRent",     "monthly_rent_manwon", "int"),                 # 월세(만원)
-    Field("contractType",    "contract_type",   "text"),                    # 신규/갱신
-    Field("contractTerm",    "contract_term",   "text"),                    # 계약기간
-    Field("preDeposit",      "prev_deposit_manwon", "int"),                 # 종전 보증금(만원)
-    Field("preMonthlyRent",  "prev_monthly_rent_manwon", "int"),           # 종전 월세(만원)
-    Field("useRRRight",      "renewal_right_used", "text"),                 # 갱신요구권 사용
-    Field("aptSeq",          "apt_seq",         "text"),
-    Field("roadnm",          "road_name",       "text"),
-    Field("roadnmcd",        "road_code",       "text"),
-    Field("roadnmbonbun",    "road_main_no",    "text"),
-    Field("roadnmbubun",     "road_sub_no",     "text"),
-    Field("roadnmseq",       "road_seq",        "text"),
-    Field("roadnmsggcd",     "road_sgg_code",   "text"),
-    Field("roadnmbcd",       "road_basement_yn", "text"),
+    Field("dealDate",        "deal_date",          "date_ymd", is_key=True),
+    Field("sggCd",           "lawd_code",          "text", is_key=True),
+    Field("umdNm",           "dong",               "text", is_key=True),
+    Field("jibun",           "jibun",              "text", is_key=True),
+    Field("aptNm",           "apt_name",           "text", is_key=True),
+    Field("excluUseAr",      "exclusive_area",     "decimal", is_key=True),
+    Field("floor",           "floor",              "int", is_key=True),
+    Field("buildYear",       "build_year",         "int"),
+    Field("deposit",         "deposit",            "int"),                       # 보증금(만원)
+    Field("monthlyRent",     "monthly_rent",       "int"),                       # 월세(만원)
+    Field("contractType",    "contract_type",      "text"),                      # 신규/갱신
+    Field("contractTerm",    "contract_term",      "text"),                      # 계약기간
+    Field("preDeposit",      "prev_deposit",       "int"),                       # 종전 보증금(만원)
+    Field("preMonthlyRent",  "prev_monthly_rent",  "int"),                       # 종전 월세(만원)
+    Field("useRRRight",      "renewal_right_used", "text"),                      # 갱신요구권 사용
+    Field("aptSeq",          "apt_seq",            "text"),
+    Field("roadnm",          "road_name",          "text"),
+    Field("roadnmcd",        "road_code",          "text"),
+    Field("roadnmbonbun",    "road_main_no",       "text"),
+    Field("roadnmbubun",     "road_sub_no",        "text"),
+    Field("roadnmseq",       "road_seq",           "text"),
+    Field("roadnmsggcd",     "road_sgg_code",      "text"),
+    Field("roadnmbcd",       "road_basement_yn",   "text"),
 ), is_wide_key=True)
 
 TABLES: dict[str, Table] = {table.name: table for table in (

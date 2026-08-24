@@ -131,13 +131,16 @@ pl.DataFrame(rows)
 - **이름·타입 정리(`clean`).** 기관이 주는 행은 필드명만으로는 의미를 알기 어렵고(`sggCd`,
   `excluUseAr`) 값이 전부 문자열입니다. 기본값 `clean=True`는 **필드명을 알아보기 쉬운 이름으로
   바꾸고 문자열 값을 실제 타입으로 변환**하며(`lawd_code`, `exclusive_area=84.97`,
-  `deal_amount_manwon=82000`), 파싱되지 않는 값은 `None`으로 둡니다. 날짜가 빠진 행은 결과에서 빼고,
+  `deal_amount=82000`), 파싱되지 않는 값은 `None`으로 둡니다. 날짜가 빠진 행은 결과에서 빼고,
   복합키 테이블은 키 차원이 빠진 행도 빼지만, 넓은 키 테이블은 그 값을 `None`으로 두고 행을
   유지합니다. `clean=False`는 기관 원문 그대로 둡니다.
-- **단위 주의.** 금액 컬럼은 단위를 이름에 담았습니다 -- 아파트 실거래가는 **만원**
-  (`deal_amount_manwon`·`deposit_manwon`·`monthly_rent_manwon`), 조달청은 **원**
-  (`estimated_price_krw`·`budget_amount_krw`), 관세청 `export_usd` 등은 **USD**입니다. 그래도
-  여러 서비스를 한 표로 합쳐 더할 때는 단위를 맞추세요.
+- **단위 주의.** 금액 단위는 서비스마다 다릅니다 -- 아파트 실거래가는 **만원**
+  (`deal_amount`·`deposit`·`monthly_rent`), 조달청은 **원**
+  (`estimated_price`·`budget_amount`), KOFIA는 **원**(`amount` 등)입니다. 서비스의 기본
+  통화가 아닌 뜻밖의 단위는 컬럼명에 붙였습니다 -- 관세청 수출입액은 **USD**
+  (`export_dollar`·`import_dollar`), KOFIA 해외파생 거래대금은 **USD**(`trade_value_usd`).
+  그 밖의 단위는 각 서비스 문서(`docs/*.md`)에 적어 두었으니, 여러 서비스를 한 표로 합쳐
+  더할 때는 단위를 직접 맞추세요.
 - **탐색.** 어떤 서비스·오퍼레이션이 있는지는 `datagokr list`로 봅니다. Python에선 서비스
   목록은 `catalog.services()`, 한 서비스의 오퍼레이션은 `catalog.operations("weather")`,
   정리된 열 스키마는 `catalog.fields("weather", "forecast")`(CLI는 `datagokr fields`)로 봅니다.

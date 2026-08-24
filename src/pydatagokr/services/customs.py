@@ -3,11 +3,12 @@
 One operation, ``getItemtradeList`` (품목별 수출입실적): monthly export/import totals for
 one HS code over a year-month range. The service is **XML-only** -- sending the JSON flag
 makes it fault, so the session speaks XML -- and answers with a period formatted
-``"2026.01"`` (dot, not a bare YYYYMM). Each item carries the HS code (``hsCode``), the
-Korean item name (``statKor``), export USD/weight (``expDlr``/``expWgt``), import
-USD/weight (``impDlr``/``impWgt``), and the trade balance USD (``balPayments`` =
-``expDlr - impDlr``, which can be negative). The request takes ``strtYymm``/``endYymm`` =
-YYYYMM range bounds and ``hsSgn`` = the HS code.
+``"2026.01"`` (dot, not a bare YYYYMM). Each item carries the HS code (``hs_code``), the
+Korean item name (``item_name``), the ``export_dollar``/``import_dollar`` amounts in USD --
+the vendor's ``expDlr``/``impDlr`` tokens spell the dollar, so the clean name keeps it --
+with their ``export_weight``/``import_weight`` in kg, and the ``trade_balance`` in USD (=
+``export_dollar - import_dollar``, which can be negative). The request takes
+``strtYymm``/``endYymm`` = YYYYMM range bounds and ``hsSgn`` = the HS code.
 """
 
 from __future__ import annotations
@@ -32,11 +33,11 @@ ITEM_TRADE = Table(
         Field("year",        "period",            "date_ym", is_key=True),   # "2026.01" -> "2026-01"
         Field("hsCode",      "hs_code",           "text", is_key=True),
         Field("statKor",     "item_name",         "text"),
-        Field("expDlr",      "export_usd",        "int"),
-        Field("expWgt",      "export_weight_kg",  "int"),
-        Field("impDlr",      "import_usd",        "int"),
-        Field("impWgt",      "import_weight_kg",  "int"),
-        Field("balPayments", "trade_balance_usd", "int"),
+        Field("expDlr",      "export_dollar",     "int"),
+        Field("expWgt",      "export_weight",     "int"),
+        Field("impDlr",      "import_dollar",     "int"),
+        Field("impWgt",      "import_weight",     "int"),
+        Field("balPayments", "trade_balance",     "int"),
     ),
 )
 

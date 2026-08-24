@@ -33,7 +33,7 @@ BASE_URL = "https://apis.data.go.kr/1230000/ad/BidPublicInfoService"
 QueryBasis = Literal["1", "2"]   # "1" 공고게시일시, "2" 개찰일시
 
 # The header fields shared by every 업무구분's 입찰공고목록. 배정예산 is absent on 공사
-# announcements, so ``budget_amount_krw`` stays ``None`` there rather than being a separate table.
+# announcements, so ``budget_amount`` stays ``None`` there rather than being a separate table.
 _BID = (
     Field("bidNtceNo",         "notice_no",        "text", is_key=True),   # 입찰공고번호
     Field("bidNtceOrd",        "notice_ord",       "text", is_key=True),   # 입찰공고차수
@@ -46,8 +46,8 @@ _BID = (
     Field("bidNtceDt",         "notice_at",        "text"),                # 입찰공고일시
     Field("bidClseDt",         "bid_close_at",     "text"),                # 입찰마감일시
     Field("opengDt",           "opening_at",       "text"),                # 개찰일시
-    Field("presmptPrce",       "estimated_price_krw", "int"),              # 추정가격(원)
-    Field("asignBdgtAmt",      "budget_amount_krw", "int"),                # 배정예산(원)
+    Field("presmptPrce",       "estimated_price",  "int"),                 # 추정가격(원)
+    Field("asignBdgtAmt",      "budget_amount",    "int"),                 # 배정예산(원)
     Field("ntceInsttOfclNm",   "officer_name",     "text"),                # 공고담당자
     Field("bidNtceDtlUrl",     "notice_url",       "text"),                # 공고상세 URL
     Field("rgstDt",            "registered_at",    "text"),                # 등록일시
@@ -124,7 +124,7 @@ class Procurement:
                      clean: bool) -> list[Row] | list[CleanRow]: ...
     def construction(self, *, begin: str, end: str, query_basis: QueryBasis = "1",
                      clean: bool = True) -> list[Row] | list[CleanRow]:
-        """공사 입찰공고 (배정예산 미제공 -- ``budget_amount_krw`` is ``None``). Args as
+        """공사 입찰공고 (배정예산 미제공 -- ``budget_amount`` is ``None``). Args as
         :meth:`goods`."""
         return self.fetch("construction", begin=begin, end=end,
                           query_basis=query_basis, clean=clean)

@@ -20,9 +20,9 @@ datagokr realestate apt_trade 11110 --deal-ym 202401
 
 첫 인자는 `LAWD_CD`(법정동 앞 5자리), `--deal-ym`은 계약년월(YYYYMM)입니다.
 
-금액 단위는 **만원**입니다 -- `deal_amount_manwon`(거래금액)·`deposit_manwon`(보증금)·
-`monthly_rent_manwon`(월세)가 모두 만원(예: `deal_amount_manwon=82000`은 8.2억 원),
-`exclusive_area`는 ㎡입니다. (컬럼명에 단위를 담아 원/USD 서비스와 섞어 더할 때 헷갈리지 않게 했습니다.)
+금액 단위는 **만원**입니다 -- `deal_amount`(거래금액)·`deposit`(보증금)·
+`monthly_rent`(월세)가 모두 만원(예: `deal_amount=82000`은 8.2억 원),
+`exclusive_area`는 ㎡입니다. (단위는 컬럼명이 아니라 문서로 안내하니, 원/USD 서비스와 섞어 더할 때 단위를 맞추세요.)
 
 ## Python
 

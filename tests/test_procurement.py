@@ -65,7 +65,7 @@ def test_services_types_the_header():
     row = proc.services(begin="202608010000", end="202608102359")[0]
     assert row["notice_no"] == "R26BK0166146"
     assert row["notice_name"].startswith("2026년")
-    assert row["estimated_price_krw"] == 265090909 and row["budget_amount_krw"] == 291600000  # won
+    assert row["estimated_price"] == 265090909 and row["budget_amount"] == 291600000  # won
     assert row["bid_close_at"] == "2026-08-12 12:00:00"                                # text
 
 
@@ -74,8 +74,8 @@ def test_construction_without_budget_leaves_it_none():
     del row["asignBdgtAmt"]                       # 공사 announcements omit 배정예산
     proc, _ = _proc(_xml([row], 1))
     got = proc.construction(begin="202608010000", end="202608012359")[0]
-    assert got["estimated_price_krw"] == 265090909
-    assert got["budget_amount_krw"] is None
+    assert got["estimated_price"] == 265090909
+    assert got["budget_amount"] is None
 
 
 def test_services_raw_passthrough_keeps_vendor_tokens():

@@ -63,11 +63,11 @@ def test_item_trade_cleans_by_default():
         "period":            "2026-01",
         "hs_code":           "8542311000",
         "item_name":         "모노리식(monolithic) 집적회로",
-        "export_usd":        1000,
-        "export_weight_kg":  20,
-        "import_usd":        300,
-        "import_weight_kg":  6,
-        "trade_balance_usd": 700,
+        "export_dollar": 1000,
+        "export_weight":   20,
+        "import_dollar":  300,
+        "import_weight":    6,
+        "trade_balance":  700,
     }]
     url = opener.requests[0].full_url
     assert "hsSgn=8542311000" in url
@@ -84,7 +84,7 @@ def test_item_trade_raw_returns_vendor_tokens():
 def test_negative_trade_balance_parses():
     customs, _ = _customs(_xml([{**_ROW, "balPayments": "-1234"}], 1))
     cleaned = customs.item_trade("8542311000", start="202601", end="202601")
-    assert cleaned[0]["trade_balance_usd"] == -1234
+    assert cleaned[0]["trade_balance"] == -1234
 
 
 def test_item_trade_natural_key_includes_the_period():
