@@ -2,8 +2,8 @@
 
 One session speaks to one service base URL and turns an operation + filters into rows: a
 ``list[dict[str, str]]``, the vendor's items passed through with their own field names.
-No third-party HTTP client -- ``urllib`` carries it, so the package has zero runtime
-dependencies.
+No third-party HTTP client -- ``urllib`` carries the transport; the credential store
+(credbox) the key is read from is the package's only runtime dependency.
 
 The transport is *neutral*: it knows the portal's two envelope shapes and its paging
 protocol, and nothing about any particular dataset. It speaks either encoding -- JSON
@@ -133,6 +133,13 @@ class DataGoKrSession:
         # would ship the key in cleartext, the exact leak _NoRedirect exists to prevent. All
         # data.go.kr roots are https, so reject anything else at construction, before the key
         # can reach a string.
+        # base_url also becomes the request-line path (it is not url-encoded), which
+        # http.client must ascii-encode. A non-ASCII base_url -- a full-width character or a
+        # U+00A0 pasted from a web page/PDF that survives the scheme check -- would make
+        # urllib raise while encoding the request line (the line carrying serviceKey=<KEY>)
+        # and echo it. Reject it here, before the key is resolved; the message names no key.
+        if not base_url.isascii():
+            raise ValueError("base_url must be ASCII (it is the request URL root)")
         if urllib.parse.urlsplit(base_url).scheme != "https":
             raise ValueError(
                 "base_url must be an https:// data.go.kr service root "
@@ -191,13 +198,21 @@ class DataGoKrSession:
         the vendor is the authority on its own filter grammar, so this transport checks
         only its own inputs (e.g. the timeout, the page size) and forwards the filters as given.
 
-        Raises ``ValueError`` for a non-positive ``num_of_rows`` or a filter whose name
-        collides with a transport-managed query parameter; ``DataGoKrPagingError`` when the
+        Raises ``ValueError`` for a non-ASCII ``operation`` (it is the request URL path), a
+        non-positive ``num_of_rows``, or a filter whose name collides with a
+        transport-managed query parameter; ``DataGoKrPagingError`` when the
         vendor's paging breaks (an empty page before the declared count, a re-served or
         over-count page at or past it, or no last-page signal within the page cap); other
         :class:`DataGoKrError` subclasses on a
         transport failure or a vendor error/auth/rate-limit envelope.
         """
+        if not operation.isascii():
+            # operation becomes the request-line path (it is not url-encoded), and an HTTP
+            # request line must be ASCII. A non-ASCII operation would make urllib raise
+            # while encoding that line -- the line that carries the key-bearing query -- and
+            # echo it. Reject it here, before the key is ever placed in a URL; the message
+            # names only the caller's operation, never the key.
+            raise ValueError("operation must be ASCII (it is the request URL path)")
         if isinstance(num_of_rows, bool) or not isinstance(num_of_rows, int) or num_of_rows <= 0:
             raise ValueError("num_of_rows must be a positive integer")
         # serviceKey / numOfRows / pageNo are set by the transport itself; a filter of the same

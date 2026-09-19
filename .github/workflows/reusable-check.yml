@@ -67,21 +67,25 @@ jobs:
           .venv/bin/python -c "import re,sys; sys.exit(0 if re.fullmatch(r'\d+\.\d+\.\d+', '$claude') else 1)" \
             || { echo "plugin version '$claude' is not semver MAJOR.MINOR.PATCH"; exit 1; }
 
-      - name: Confirm the package has zero runtime dependencies
-        # The zero-dependency claim is documented in the pyproject comment; a claim
-        # nothing checks quietly stops being true. Installed into a bare
-        # environment, pydatagokr must import with the standard library alone, and
-        # the console script must run.
+      - name: Confirm the only runtime dependency is credbox
+        # The transport is dependency-free (urllib) and the sole runtime dependency is
+        # credbox, the credential store; documented in the pyproject comment. A claim
+        # nothing checks quietly stops being true, so a stray extra runtime dependency
+        # creeping into `dependencies` is caught here, not in a user's env.
         run: |
           uv venv /tmp/bare --python ${{ matrix.python-version }}
           uv pip install --python /tmp/bare/bin/python .
           /tmp/bare/bin/python -c "
+          import re
           import importlib.metadata as md
           requires = md.requires('pydatagokr') or []
           runtime = [r for r in requires if 'extra ==' not in r]
-          assert runtime == [], f'unexpected runtime dependencies: {runtime}'
+          # Each requirement's bare name (before any version/marker/extra), PEP 503
+          # normalized; the runtime set must be exactly credbox.
+          names = sorted(re.split(r'[<>=!~;\[\s]', r, maxsplit=1)[0].replace('_', '-').lower() for r in runtime)
+          assert names == ['credbox'], f'unexpected runtime dependencies: {runtime}'
           import pydatagokr
-          print('pydatagokr imports with the standard library alone')
+          print('pydatagokr imports with only credbox present')
           "
           # The console script runs, and its top-level --version prints (not shoved
           # into a required subcommand).

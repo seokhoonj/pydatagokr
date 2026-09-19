@@ -642,6 +642,36 @@ def test_scheme_less_or_http_base_url_is_rejected_without_leaking_the_key():
             assert form not in str(exc.value)
 
 
+@pytest.mark.parametrize("suffix", ["\uc870\ud68c\uc11c\ube44\uc2a4", "svc\u00a0x", "svc\udcfex"])
+def test_non_ascii_base_url_is_rejected_without_leaking_the_key(suffix):
+    # base_url becomes the request-line path (never url-encoded); a non-ASCII base_url -- a
+    # full-width character or a U+00A0 pasted from a web page/PDF that survives the https
+    # check -- would make urllib raise while ascii-encoding the request line (which carries
+    # the key) and escape the transport's except tuple. Reject at construction, before the
+    # key is resolved, with no form of the key in the error.
+    forms = [_KEY, urllib.parse.quote_plus(_KEY), urllib.parse.quote(_KEY)]
+    with pytest.raises(ValueError) as exc:
+        DataGoKrSession(f"https://apis.data.go.kr/{suffix}", _KEY)
+    for form in forms:
+        assert form not in str(exc.value)
+
+
+@pytest.mark.parametrize("operation", ["조회Op", "get—Thing", "get\udcfeThing"])
+def test_non_ascii_operation_is_rejected_without_leaking_the_key(operation):
+    # operation becomes the request-line path (it is never url-encoded); a non-ASCII
+    # operation would make urllib raise while ascii-encoding the request line -- which
+    # carries the key-bearing query -- and UnicodeEncodeError is not in the transport's
+    # except tuple, so it would escape with the full key. Reject it at the fetch boundary,
+    # before the key is placed in a URL, with an error that carries no form of the key.
+    session, opener = _session(_envelope([], total=0))
+    forms = [_KEY, urllib.parse.quote_plus(_KEY), urllib.parse.quote(_KEY)]
+    with pytest.raises(ValueError) as exc:
+        session.fetch(operation)
+    for form in forms:
+        assert form not in str(exc.value)
+    assert not opener.requests   # rejected before any request was built
+
+
 def test_https_base_url_is_accepted():
     # The valid case still constructs (a plain https root), so the guard rejects only bad schemes.
     assert DataGoKrSession("https://apis.data.go.kr/x", _KEY).base_url == "https://apis.data.go.kr/x"
